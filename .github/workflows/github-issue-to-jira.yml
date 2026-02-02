@@ -1,0 +1,135 @@
+name: GitHub-Jira Sync
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+
+jobs:
+  sync-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync with Jira
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ACTION: ${{ github.event.action }}
+          LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+        run: |
+          echo "Action: $ACTION"
+          echo "Labels: $LABELS"
+          
+          EPIC_KEY="MEM-2"
+          PREFIX="[BE]"
+          
+          JIRA_KEY=$(echo "$ISSUE_BODY" | grep -oP 'Jira:\s*\K[A-Z]+-[0-9]+' || echo "")
+          
+          if [ "$ACTION" == "opened" ]; then
+            echo "Creating new Jira issue..."
+            
+            ISSUE_TYPE="Task"
+            if [[ "$LABELS" == *"feature"* ]]; then
+              ISSUE_TYPE="Story"
+            elif [[ "$LABELS" == *"fix"* ]]; then
+              ISSUE_TYPE="Bug"
+            fi
+            
+            DESC_TEXT="GitHub Issue: $ISSUE_URL | Repository: MEMME-SERVER | Labels: $LABELS"
+            
+            PAYLOAD=$(jq -n \
+              --arg project "$JIRA_PROJECT_KEY" \
+              --arg summary "$PREFIX $ISSUE_TITLE" \
+              --arg desc "$DESC_TEXT" \
+              --arg type "$ISSUE_TYPE" \
+              --arg epic "$EPIC_KEY" \
+              '{
+                fields: {
+                  project: {key: $project},
+                  summary: $summary,
+                  description: {
+                    type: "doc",
+                    version: 1,
+                    content: [{
+                      type: "paragraph",
+                      content: [{type: "text", text: $desc}]
+                    }]
+                  },
+                  issuetype: {name: $type},
+                  parent: {key: $epic}
+                }
+              }')
+            
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              "$JIRA_BASE_URL/rest/api/3/issue" \
+              -d "$PAYLOAD")
+            
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            
+            if [ "$HTTP_CODE" -eq 201 ]; then
+              JIRA_KEY=$(echo "$BODY" | jq -r '.key')
+              echo "Jira issue created: $JIRA_KEY"
+              
+              JIRA_LINE="Jira: ${JIRA_KEY}"
+              NEW_BODY=$(printf "%s\n\n---\n**%s**" "$ISSUE_BODY" "$JIRA_LINE")
+              
+              BODY_JSON=$(jq -n --arg body "$NEW_BODY" '{body: $body}')
+              
+              curl -X PATCH \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER" \
+                -d "$BODY_JSON"
+              
+              echo "GitHub issue updated"
+            else
+              echo "Failed (HTTP $HTTP_CODE): $BODY"
+              exit 1
+            fi
+            
+          elif [ "$ACTION" == "closed" ]; then
+            if [ -n "$JIRA_KEY" ]; then
+              echo "Closing Jira issue: $JIRA_KEY"
+              
+              TRANSITIONS=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY/transitions")
+              
+              DONE_ID=$(echo "$TRANSITIONS" | jq -r '.transitions[] | select(.name == "Done" or .name == "완료") | .id' | head -1)
+              
+              if [ -n "$DONE_ID" ]; then
+                curl -s -X POST \
+                  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY/transitions" \
+                  -d "{\"transition\":{\"id\":\"$DONE_ID\"}}"
+                echo "Jira issue closed"
+              fi
+            fi
+            
+          elif [ "$ACTION" == "reopened" ]; then
+            if [ -n "$JIRA_KEY" ]; then
+              echo "Reopening Jira issue: $JIRA_KEY"
+              
+              TRANSITIONS=$(curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY/transitions")
+              
+              TODO_ID=$(echo "$TRANSITIONS" | jq -r '.transitions[] | select(.name == "To Do" or .name == "In Progress") | .id' | head -1)
+              
+              if [ -n "$TODO_ID" ]; then
+                curl -s -X POST \
+                  -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  "$JIRA_BASE_URL/rest/api/3/issue/$JIRA_KEY/transitions" \
+                  -d "{\"transition\":{\"id\":\"$TODO_ID\"}}"
+                echo "Jira issue reopened"
+              fi
+            fi
+          fi
