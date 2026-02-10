@@ -1,0 +1,66 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### 환경 파일 및 DB 설정 ###
+# 환경 변수 파일
+.env
+.env.*
+*.env
+
+# 로컬 데이터베이스 설정 및 시크릿
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+*.mv.db
+*.log
+*.sql
+*.bak
+*.tmp
+*.old
+*.local
+*.conf
+*.cfg
+*.secret
+*.pem
+*.crt
+*.key
+
+# OS/툴 자동 생성
+.DS_Store
+Thumbs.db
