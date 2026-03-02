@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: MemoryMe
+
+  config:
+    import:
+      - classpath:memme.yaml
+
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  main:
+    web-application-type: servlet
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+server:
+  port: ${SERVER_PORT}
+
+springdoc:
+  swagger-ui:
+    path: /v1/docs
+    operations-sorter: method
+  api-docs:
+    path: /v1/api-docs
+  show-actuator: true
+
+# spring:
+#   web:
+#     error:
+#       include-stacktrace: never
+#       include-binding-errors: never
+#       include-message: always

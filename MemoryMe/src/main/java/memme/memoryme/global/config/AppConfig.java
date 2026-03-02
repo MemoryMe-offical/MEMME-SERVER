@@ -1,4 +1,4 @@
-package memme.memoryme.config;
+package memme.memoryme.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
