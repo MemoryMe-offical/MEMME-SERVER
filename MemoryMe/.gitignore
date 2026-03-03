@@ -41,6 +41,8 @@ bin/
 .env
 .env.*
 *.env
+memme.yaml
+application-dev.yaml
 
 # 로컬 데이터베이스 설정 및 시크릿
 *.db
