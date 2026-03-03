@@ -4,7 +4,7 @@ spring:
 
   config:
     import:
-      - classpath:memme.yaml
+      - optional:file:./memme.yaml
 
   datasource:
     url: ${DATABASE_URL}
