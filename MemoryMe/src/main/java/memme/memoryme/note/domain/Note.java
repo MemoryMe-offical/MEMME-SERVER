@@ -36,4 +36,22 @@ public class Note {
     private LocalDateTime created;
     @Column(nullable = false)
     private LocalDateTime updated;
+
+    @PrePersist
+    void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (created == null) {
+            created = now;
+        }
+
+        if (updated == null) {
+            updated = now;
+        }
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updated = LocalDateTime.now();
+    }
 }

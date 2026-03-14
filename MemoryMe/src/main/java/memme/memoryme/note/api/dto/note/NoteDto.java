@@ -1,5 +1,6 @@
-package memme.memoryme.note.api.dto;
+package memme.memoryme.note.api.dto.note;
 
+import memme.memoryme.note.api.dto.PostDto;
 import memme.memoryme.note.domain.Note;
 
 import java.time.LocalDateTime;
