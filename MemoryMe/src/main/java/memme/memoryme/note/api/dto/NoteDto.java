@@ -17,7 +17,7 @@ public record NoteDto(
         return new NoteDto(
                 note.getUid(),
                 note.getTitle(),
-                Optional.of(PostDto.from(note.getNotePost())),
+                Optional.of(PostDto.from(note.getPost())),
                 note.getCreated(),
                 note.getUpdated()
         );

@@ -19,6 +19,7 @@ public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false, unique = true, updatable = false)
     private UUID uid;
 
@@ -29,7 +30,7 @@ public class Note {
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "note_post_id")
-    private NotePost notePost;
+    private Post post;
 
     @Column(nullable = false)
     private LocalDateTime created;

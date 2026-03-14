@@ -1,6 +1,6 @@
 package memme.memoryme.note.api.dto;
 
-import memme.memoryme.note.domain.NotePost;
+import memme.memoryme.note.domain.Post;
 
 import java.util.List;
 
@@ -9,11 +9,11 @@ public record PostDto(
         List<String> images,
         List<String> files
 ) {
-    public static PostDto from(NotePost notePost) {
+    public static PostDto from(Post post) {
         return new PostDto(
-                notePost.getContent(),
-                notePost.getImages(),
-                notePost.getFiles()
+                post.getContent(),
+                post.getImages(),
+                post.getFiles()
         );
     }
 }
