@@ -1,0 +1,25 @@
+package memme.memoryme.note.api.dto;
+
+import memme.memoryme.note.domain.Note;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+public record NoteDto(
+        UUID uid,
+        String title,
+        Optional<PostDto> post,
+        LocalDateTime created,
+        LocalDateTime updated
+) {
+    public static NoteDto from(Note note) {
+        return new NoteDto(
+                note.getUid(),
+                note.getTitle(),
+                Optional.of(PostDto.from(note.getNotePost())),
+                note.getCreated(),
+                note.getUpdated()
+        );
+    }
+}
