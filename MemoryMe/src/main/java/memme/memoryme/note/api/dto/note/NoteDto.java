@@ -1,16 +1,15 @@
 package memme.memoryme.note.api.dto.note;
 
-import memme.memoryme.note.api.dto.PostDto;
+import memme.memoryme.note.api.dto.post.PostDto;
 import memme.memoryme.note.domain.Note;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 public record NoteDto(
         UUID uid,
         String title,
-        Optional<PostDto> post,
+        PostDto post,
         LocalDateTime created,
         LocalDateTime updated
 ) {
@@ -18,7 +17,7 @@ public record NoteDto(
         return new NoteDto(
                 note.getUid(),
                 note.getTitle(),
-                Optional.of(PostDto.from(note.getPost())),
+                note.getPost() != null ? PostDto.from(note.getPost()) : null,
                 note.getCreated(),
                 note.getUpdated()
         );

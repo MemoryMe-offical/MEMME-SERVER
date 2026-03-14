@@ -1,4 +1,4 @@
-package memme.memoryme.note.api.dto;
+package memme.memoryme.note.api.dto.post;
 
 import memme.memoryme.note.domain.Post;
 

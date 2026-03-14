@@ -5,4 +5,5 @@ import memme.memoryme.note.api.dto.note.NoteDto;
 
 public interface NoteService {
     NoteDto createNote(NewNoteDto newNoteDto);
+    NoteDto updateNote(NoteDto noteDto);
 }
