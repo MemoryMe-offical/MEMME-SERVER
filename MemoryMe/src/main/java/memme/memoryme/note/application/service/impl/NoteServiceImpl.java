@@ -1,6 +1,7 @@
 package memme.memoryme.note.application.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import memme.memoryme.global.util.token.CurrentUserProvider;
 import memme.memoryme.note.api.dto.note.NewNoteDto;
 import memme.memoryme.note.api.dto.note.NoteDto;
 import memme.memoryme.note.api.dto.post.PostDto;
@@ -18,13 +19,17 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     @Override
     @Transactional
     public NoteDto createNote(NewNoteDto newNoteDto) {
+
         Note note = noteRepository.save(
                 Note.builder()
                         .uid(UUID.randomUUID())
+                        // todo: userId의 타입 확인 후 변경
+                        .userId(Long.parseLong(currentUserProvider.getUserId()))
                         .title(newNoteDto.title())
                         .build()
         );
@@ -36,7 +41,7 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     public NoteDto updateNote(NoteDto noteDto) {
         Note note = noteRepository.findByUid(noteDto.uid())
-                //예외 처리 핸들러 작성 필요
+                // todo: 예외 처리 핸들러 작성 필요
                 .orElseThrow(() -> new IllegalArgumentException("Note not found"));
 
         if (noteDto.post() == null) {
