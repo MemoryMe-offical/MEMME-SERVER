@@ -29,11 +29,12 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/swagger-ui/**",
+                        .requestMatchers(
+                                "/v1/docs",
+                                "/docs/**",
                                 "/v1/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**")
-                        .permitAll()
+                                "/swagger-ui/**"
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth ->

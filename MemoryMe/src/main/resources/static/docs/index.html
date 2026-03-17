@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MemoryMe API Docs</title>
+
+    <link rel="stylesheet" href="/swagger-ui/swagger-ui.css" />
+    <link rel="stylesheet" href="/docs/swagger-custom.css" />
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+            <div class="brand-wrap">
+                <div class="brand-badge">M</div>
+                <div>
+                    <h1>MemoryMe Docs</h1>
+                    <p>API Reference Portal</p>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <div class="side-label">Environment</div>
+                <div class="env-row">
+                    <span class="status-dot"></span>
+                    <span>Spring Boot · OpenAPI 3</span>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <div class="side-label">Guide</div>
+                <ul>
+                    <li>JWT 인증 후 테스트</li>
+                    <li>응답 스키마 우선 확인</li>
+                    <li>에러 코드 표준화 유지</li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-area">
+        <header class="mobile-topbar">
+            <div class="mobile-brand">
+                <div class="brand-badge mobile-badge">M</div>
+                <div class="mobile-brand-text">
+                    <strong>MemoryMe Docs</strong>
+                    <span>API Reference Portal</span>
+                </div>
+            </div>
+
+            <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="sidebar">
+                ☰
+            </button>
+        </header>
+
+        <header class="hero">
+            <div>
+                <div class="hero-kicker">Developer Portal</div>
+                <h2>REST API Documentation</h2>
+                <p>
+                    구조는 명확하게, 사용은 가볍게
+                </p>
+            </div>
+
+            <div class="hero-actions" id="hero-actions"></div>
+        </header>
+
+        <section class="swagger-panel">
+            <div id="swagger-ui"></div>
+        </section>
+    </main>
+</div>
+
+<script src="/swagger-ui/swagger-ui-bundle.js"></script>
+<script src="/swagger-ui/swagger-ui-standalone-preset.js"></script>
+<script src="/docs/swagger-custom.js"></script>
+</body>
+</html>
