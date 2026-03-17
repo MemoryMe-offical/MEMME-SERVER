@@ -1,16 +1,41 @@
 package memme.memoryme.global.util.response;
 
-import lombok.*;
-
 import java.time.LocalDateTime;
 
-@Builder
-@Getter
-@AllArgsConstructor
-public class ResponseWrapper<T> {
-    boolean success;
-    int status;
-    String message;
-    LocalDateTime timestamp;
-    T data;
+public record ResponseWrapper<T>(
+        boolean success,
+        int status,
+        String message,
+        LocalDateTime timestamp,
+        T data
+) {
+    public static <T> ResponseWrapper<T> ok(int status, String message, T data) {
+        return new ResponseWrapper<>(
+                true,
+                status,
+                message,
+                LocalDateTime.now(),
+                data
+        );
+    }
+
+    public static <T> ResponseWrapper<T> fail(int status, String message, T data) {
+        return new ResponseWrapper<>(
+                false,
+                status,
+                message,
+                LocalDateTime.now(),
+                data
+        );
+    }
+
+    public static ResponseWrapper<Void> fail(int status, String message) {
+        return new ResponseWrapper<>(
+                false,
+                status,
+                message,
+                LocalDateTime.now(),
+                null
+        );
+    }
 }
