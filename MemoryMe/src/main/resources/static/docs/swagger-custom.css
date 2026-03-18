@@ -1,0 +1,697 @@
+:root {
+    --bg: #0a0a0b;
+    --bg-soft: #111113;
+    --panel: #141416;
+    --panel-strong: #1a1a1d;
+    --panel-hover: #202024;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --text: #f5f5f6;
+    --muted: #a1a1aa;
+    --primary: #ffffff;
+    --primary-2: #d4d4d8;
+    --success: #d4d4d8;
+    --warning: #e4e4e7;
+    --danger: #b4b4bc;
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.22);
+    --radius-xl: 16px;
+    --radius-lg: 12px;
+    --radius-md: 10px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100%;
+}
+
+body {
+    letter-spacing: -0.01em;
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+}
+
+/* sidebar */
+.sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 28px 20px;
+    border-right: 1px solid var(--line);
+    background: #0f0f10;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mobile-topbar {
+    display: none;
+}
+
+.sidebar-toggle {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #161618;
+    color: var(--text);
+    font-size: 22px;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.sidebar-toggle:hover {
+    background: var(--panel-hover);
+    border-color: var(--line-strong);
+}
+
+.mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 17px;
+}
+
+.mobile-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.mobile-brand-text strong {
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.mobile-brand-text span {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.brand-wrap {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.brand-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: 800;
+    background: #ffffff;
+    color: #111111;
+    box-shadow: none;
+}
+
+.brand-wrap h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.brand-wrap p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.side-card {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    box-shadow: none;
+}
+
+.side-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.env-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #ffffff;
+    opacity: 0.85;
+}
+
+.side-card ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.9;
+    font-size: 14px;
+}
+
+/* main */
+.main-area {
+    padding: 28px;
+}
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.hero-kicker {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.hero h2 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    font-weight: 900;
+}
+
+.hero p {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.portal-btn {
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid #ffffff;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #111111;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.portal-btn:hover {
+    opacity: 0.92;
+}
+
+.portal-btn--ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    box-shadow: none;
+}
+
+.portal-btn--ghost:hover {
+    background: #17171a;
+    border-color: var(--line-strong);
+}
+
+.swagger-panel {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: var(--radius-xl);
+    padding: 22px;
+    box-shadow: none;
+}
+
+/* 기본 swagger topbar 제거 */
+.swagger-ui .topbar {
+    display: none;
+}
+
+/* wrapper 넓게 */
+.swagger-ui .wrapper {
+    max-width: 100%;
+    padding: 0;
+}
+
+/* 전역 텍스트 */
+.swagger-ui,
+.swagger-ui .info .title,
+.swagger-ui .markdown p,
+.swagger-ui .markdown li,
+.swagger-ui .parameter__name,
+.swagger-ui .parameter__type,
+.swagger-ui table thead tr th,
+.swagger-ui table tbody tr td,
+.swagger-ui .response-col_status,
+.swagger-ui .response-col_description,
+.swagger-ui section.models h4,
+.swagger-ui section.models h5 {
+    color: var(--text);
+}
+
+.swagger-ui .info p,
+.swagger-ui .info li,
+.swagger-ui .opblock-description-wrapper p,
+.swagger-ui .response-col_description__inner p,
+.swagger-ui .responses-inner h4,
+.swagger-ui .responses-inner h5,
+.swagger-ui .tab li,
+.swagger-ui label,
+.swagger-ui .model,
+.swagger-ui .model-box,
+.swagger-ui .parameter__name.required span,
+.swagger-ui .parameter__extension,
+.swagger-ui .response-col_links {
+    color: var(--muted);
+}
+
+.swagger-ui .info {
+    margin: 0 0 18px;
+}
+
+.swagger-ui .info .title {
+    font-weight: 900;
+    letter-spacing: -0.03em;
+}
+
+.swagger-ui .scheme-container {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin: 0 0 20px;
+}
+
+.swagger-ui .auth-wrapper {
+    justify-content: flex-start;
+    margin: 0 0 18px;
+}
+
+.swagger-ui .btn.authorize {
+    border: 1px solid #ffffff;
+    border-radius: 10px;
+    color: #111111;
+    background: #ffffff;
+    font-weight: 800;
+}
+
+/* filter */
+.swagger-ui .filter {
+    margin: 0 0 18px;
+}
+
+.swagger-ui .filter input {
+    width: min(420px, 100%);
+    border-radius: 10px;
+    border: 1px solid var(--line) !important;
+    background: var(--panel-strong) !important;
+    color: var(--text) !important;
+    padding: 12px 14px !important;
+    box-shadow: none !important;
+}
+
+/* tag */
+.swagger-ui .opblock-tag {
+    margin: 28px 0 14px;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 21px;
+    font-weight: 900;
+    color: var(--text);
+}
+
+/* endpoint card */
+.swagger-ui .opblock {
+    margin: 0 0 14px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: #151518;
+    box-shadow: none;
+}
+
+.swagger-ui .opblock:hover {
+    border-color: var(--line-strong);
+}
+
+.swagger-ui .opblock .opblock-summary {
+    padding: 14px 16px;
+    align-items: center;
+}
+
+.swagger-ui .opblock .opblock-summary-method {
+    min-width: 78px;
+    border-radius: 8px;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    border: none;
+}
+
+/* 메소드 배지: 무신사 느낌으로 단색 */
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+    background: #f4f4f5;
+    color: #111111;
+}
+
+.swagger-ui .opblock.opblock-post .opblock-summary-method {
+    background: #d4d4d8;
+    color: #111111;
+}
+
+.swagger-ui .opblock.opblock-put .opblock-summary-method,
+.swagger-ui .opblock.opblock-patch .opblock-summary-method {
+    background: #a1a1aa;
+    color: #111111;
+}
+
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+    background: #71717a;
+    color: #ffffff;
+}
+
+/* 카드 본체는 색감 거의 통일 */
+.swagger-ui .opblock.opblock-get,
+.swagger-ui .opblock.opblock-post,
+.swagger-ui .opblock.opblock-put,
+.swagger-ui .opblock.opblock-patch,
+.swagger-ui .opblock.opblock-delete {
+    background: #151518;
+    border-color: var(--line);
+}
+
+.swagger-ui .opblock .opblock-summary-path {
+    color: var(--text);
+    font-weight: 800;
+}
+
+.swagger-ui .opblock .opblock-summary-description {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+/* 내부 박스 */
+.swagger-ui .opblock-section-header,
+.swagger-ui .responses-inner,
+.swagger-ui .model-box,
+.swagger-ui textarea,
+.swagger-ui input[type=text],
+.swagger-ui input[type=password],
+.swagger-ui select,
+.swagger-ui .highlight-code,
+.swagger-ui pre.microlight,
+.swagger-ui .dialog-ux .modal-ux {
+    background: var(--panel-strong) !important;
+    color: var(--text) !important;
+    border-color: var(--line) !important;
+    box-shadow: none !important;
+}
+
+.swagger-ui textarea,
+.swagger-ui input[type=text],
+.swagger-ui input[type=password],
+.swagger-ui select {
+    border-radius: 10px !important;
+}
+
+/* execute / try-out */
+.swagger-ui .btn {
+    border-radius: 10px;
+    font-weight: 800;
+    box-shadow: none;
+}
+
+.swagger-ui .btn.try-out__btn,
+.swagger-ui .btn.cancel {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+}
+
+.swagger-ui .btn.try-out__btn:hover,
+.swagger-ui .btn.cancel:hover {
+    background: #17171a;
+    border-color: var(--line-strong);
+}
+
+.swagger-ui .btn.execute {
+    border: 1px solid #ffffff;
+    color: #111111;
+    background: #ffffff;
+    font-weight: 900;
+}
+
+.swagger-ui .download-contents,
+.swagger-ui .copy-to-clipboard {
+    filter: grayscale(1) brightness(1.1);
+}
+
+/* table */
+.swagger-ui table tbody tr td,
+.swagger-ui table thead tr th {
+    border-color: var(--line);
+}
+
+/* response block / code */
+.swagger-ui .highlight-code,
+.swagger-ui pre.microlight,
+.swagger-ui .microlight {
+    background: #111113 !important;
+}
+
+/* Models / Schemas */
+.swagger-ui section.models {
+    margin-top: 28px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #141416;
+}
+
+.swagger-ui section.models .model-container {
+    border-color: var(--line);
+    background: transparent;
+}
+
+.swagger-ui section.models,
+.swagger-ui section.models .model-container,
+.swagger-ui section.models .model-box,
+.swagger-ui section.models .model-box-control,
+.swagger-ui section.models .model-box-control:focus,
+.swagger-ui section.models .model-toggle,
+.swagger-ui section.models .model-toggle:focus,
+.swagger-ui section.models .model,
+.swagger-ui section.models .property,
+.swagger-ui section.models table,
+.swagger-ui section.models table tbody tr td,
+.swagger-ui section.models table thead tr th,
+.swagger-ui section.models .brace-open,
+.swagger-ui section.models .brace-close {
+    background: transparent !important;
+    color: var(--text) !important;
+    border-color: var(--line) !important;
+}
+
+.swagger-ui section.models .model-box {
+    background: #1a1a1d !important;
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--line) !important;
+}
+
+.swagger-ui .model-box .model-box-control,
+.swagger-ui .model-box .model-toggle,
+.swagger-ui .model-box button,
+.swagger-ui section.models button,
+.swagger-ui section.models summary,
+.swagger-ui section.models span {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.swagger-ui section.models .model-box-control,
+.swagger-ui section.models .model-box-control > span,
+.swagger-ui section.models .model-toggle,
+.swagger-ui section.models .model-title,
+.swagger-ui section.models .model-title span {
+    background: transparent !important;
+    color: var(--text) !important;
+}
+
+.swagger-ui section.models .model-title {
+    font-weight: 800 !important;
+    color: var(--text) !important;
+}
+
+.swagger-ui section.models .model-toggle:after,
+.swagger-ui section.models .model-toggle:before {
+    background: transparent !important;
+}
+
+.swagger-ui .prop-type,
+.swagger-ui .model .property.primitive,
+.swagger-ui .model-title__text,
+.swagger-ui .model-toggle {
+    color: #d4d4d8 !important;
+}
+
+.swagger-ui section.models pre,
+.swagger-ui section.models code {
+    background: transparent !important;
+    color: var(--text) !important;
+}
+
+/* modal / auth */
+.swagger-ui .dialog-ux .modal-ux {
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux-header {
+    border-bottom: 1px solid var(--line) !important;
+    background: #161618 !important;
+    padding: 16px 20px !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux-content {
+    background: #141416 !important;
+    padding: 18px 20px !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux-footer {
+    border-top: 1px solid var(--line) !important;
+    background: #161618 !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux-header h3,
+.swagger-ui .dialog-ux .modal-ux-content,
+.swagger-ui .dialog-ux label,
+.swagger-ui .auth-container h4,
+.swagger-ui .auth-container p {
+    color: var(--text) !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux input[type=text],
+.swagger-ui .dialog-ux .modal-ux input[type=password] {
+    background: #1b1b1f !important;
+    color: var(--text) !important;
+    border: 1px solid var(--line) !important;
+}
+
+/* scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.14);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* mobile */
+@media (max-width: 1180px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 72px;
+        left: 18px;
+        right: 18px;
+        height: auto;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #111113;
+        z-index: 1000;
+        transform: translateY(-12px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: all 0.22s ease;
+        padding: 18px;
+    }
+
+    .sidebar.open {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .mobile-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #111113;
+        position: sticky;
+        top: 12px;
+        z-index: 1001;
+    }
+
+    .brand-wrap {
+        display: none;
+    }
+
+    .main-area {
+        padding: 18px;
+    }
+
+    .hero {
+        flex-direction: column;
+    }
+}

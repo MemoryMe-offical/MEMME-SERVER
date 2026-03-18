@@ -33,7 +33,7 @@ public interface NoteApi {
                     @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
             }
     )
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     // todo: Header로 UUID 받아오는 느낌으로 변경 해야 할 것 같음
     ResponseEntity<ResponseWrapper<NoteDto>> toNoteDto(
             @Parameter(description = "새로운 메모")
