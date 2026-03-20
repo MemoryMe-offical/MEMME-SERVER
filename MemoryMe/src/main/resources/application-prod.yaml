@@ -36,11 +36,17 @@ server:
 
 springdoc:
   swagger-ui:
-    path: /v1/docs
-    operations-sorter: method
+    operations-sorter: alpha
+    tags-sorter: alpha
+    doc-expansion: none
+    deep-linking: true
+    display-request-duration: true
+    filter: true
+    try-it-out-enabled: true
+    persist-authorization: true
+
   api-docs:
     path: /v1/api-docs
-  show-actuator: true
 
 # spring:
 #   web:

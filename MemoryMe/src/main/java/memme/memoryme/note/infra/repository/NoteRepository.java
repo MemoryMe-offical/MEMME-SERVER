@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long> {
     Optional<Note> findByUid(UUID uid);
+    void deleteByUid(UUID uid);
 }
