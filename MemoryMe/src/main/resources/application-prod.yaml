@@ -5,6 +5,7 @@ spring:
   config:
     import:
       - optional:file:./memme.yaml
+      - optional:file:.env
 
   datasource:
     url: ${DATABASE_URL}
@@ -30,6 +31,43 @@ spring:
       enabled: true
       max-file-size: 100MB
       max-request-size: 100MB
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    protocol: smtp
+    tls: true
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            redirect-uri: ${KAKAO_REDIRECT_URI}
+            client-authentication-method: POST
+            authorization-grant-type: authorization_code
+
+            scope:
+              - profile_nickname
+              - account_email
+            client-name: Kakao
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 server:
   port: ${SERVER_PORT}

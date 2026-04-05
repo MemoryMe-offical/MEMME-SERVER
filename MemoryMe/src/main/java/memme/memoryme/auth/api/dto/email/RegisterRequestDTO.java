@@ -1,4 +1,4 @@
-package memme.memoryme.auth.api.dto;
+package memme.memoryme.auth.api.dto.email;
 
 import lombok.Getter;
 import lombok.Setter;
