@@ -39,7 +39,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v1/auth/login",
                                 "/v1/auth/register",
-                                "/v1/auth/email/**"
+                                "/v1/auth/email/**",
+                                /* 테스트용 */
+                                "/v1",
+                                "/v1/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
