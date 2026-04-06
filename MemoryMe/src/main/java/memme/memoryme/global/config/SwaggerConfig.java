@@ -27,7 +27,7 @@ public class SwaggerConfig {
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .info(apiInfo())
                 .addServersItem(new Server()
-                        .url("http://localhost:" + port) // 추후 도메인으로 변경
+                        .url("https://memme.o-r.kr")
                         .description("Production server"))
                 .addServersItem(new Server()
                         .url("http://localhost:" + port)
