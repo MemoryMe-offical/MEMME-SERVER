@@ -58,7 +58,8 @@ public class SecurityConfig {
                 registry.addMapping("/**")
                         .allowedOriginPatterns(
                                 "http://localhost:*",
-                                "http://127.0.0.1:*"
+                                "http://127.0.0.1:*",
+                                "https://memme.o-r.kr"
                         )
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
