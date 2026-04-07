@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import memme.memoryme.auth.api.dto.email.LoginResponseDTO;
 import memme.memoryme.auth.domain.EmailVerificationEntity;
 import memme.memoryme.auth.infra.EmailVerificationRepository;
-import memme.memoryme.global.util.JwtUtil;
+import memme.memoryme.global.util.jwt.JwtUtil;
 import memme.memoryme.user.domain.UserEntity;
 import memme.memoryme.user.infra.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
