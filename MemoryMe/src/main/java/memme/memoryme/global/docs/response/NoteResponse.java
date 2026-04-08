@@ -2,7 +2,7 @@ package memme.memoryme.global.docs.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import memme.memoryme.global.util.response.ResponseWrapper;
-import memme.memoryme.note.api.dto.note.NoteDto;
+import memme.memoryme.memo.api.dto.memo.MemoDto;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
                     "post": {
                       "content": "오늘은 회의 내용을 정리하고 다음 작업 일정을 정했다.",
                       "images": [
-                        "https://cdn.example.com/images/note-1.png"
+                        "https://cdn.example.com/images/memo-1.png"
                       ],
                       "files": [
                         "https://cdn.example.com/files/meeting-notes.pdf"
@@ -34,9 +34,9 @@ import java.time.LocalDateTime;
                 }
                 """
 )
-public class NoteResponse extends ResponseWrapper<NoteDto> {
+public class NoteResponse extends ResponseWrapper<MemoDto> {
 
-    public NoteResponse(boolean success, int status, String message, LocalDateTime timestamp, NoteDto data) {
+    public NoteResponse(boolean success, int status, String message, LocalDateTime timestamp, MemoDto data) {
         super(success, status, message, timestamp, data);
     }
 }

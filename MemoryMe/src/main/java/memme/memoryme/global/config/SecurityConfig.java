@@ -1,7 +1,7 @@
 package memme.memoryme.global.config;
 
 import lombok.RequiredArgsConstructor;
-import memme.memoryme.global.util.JwtFilter;
+import memme.memoryme.global.util.jwt.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,11 +39,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v1/auth/login",
                                 "/v1/auth/register",
-                                "/v1/auth/email/**",
-                                /* 테스트용 */
-                                "/v1",
-                                "/v1/**"
+                                "/v1/auth/email/**"
                         ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

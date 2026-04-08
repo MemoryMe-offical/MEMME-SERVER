@@ -86,6 +86,10 @@ springdoc:
   api-docs:
     path: /v1/api-docs
 
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 3600000
+
 # spring:
 #   web:
 #     error:
