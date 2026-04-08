@@ -61,8 +61,7 @@ public interface MemoApi {
             }
     )
     @PatchMapping
-        // todo: Token에서 UUID 뽑아내어 사용
-    ResponseEntity<ResponseWrapper<MemoDto>> updateNote(
+    ResponseEntity<ResponseWrapper<MemoDto>> updateMemo(
             @Parameter(description = "수정 할 메모")
             @RequestBody MemoDto memoDto
     );

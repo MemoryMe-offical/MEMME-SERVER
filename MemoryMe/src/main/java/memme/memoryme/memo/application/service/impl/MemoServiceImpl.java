@@ -6,6 +6,7 @@ import memme.memoryme.global.util.jwt.CurrentUserProvider;
 import memme.memoryme.memo.api.dto.memo.NewMemoDto;
 import memme.memoryme.memo.api.dto.memo.MemoDto;
 import memme.memoryme.memo.api.dto.post.PostDto;
+import memme.memoryme.memo.application.port.UserReader;
 import memme.memoryme.memo.application.service.MemoService;
 import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.memo.domain.Post;
@@ -24,46 +25,50 @@ public class MemoServiceImpl implements MemoService {
     private final MemoRepository memoRepository;
     private final PostRepository postRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final UserReader userReader;
 
     @Override
     @Transactional
-    public MemoDto createNote(NewMemoDto newMemoDto) {
+    public MemoDto createMemo(NewMemoDto newMemoDto) {
+        UUID userUid = currentUserProvider.getUid();
+
+        validateUserExists(userUid);
 
         Memo memo = memoRepository.save(
                 Memo.builder()
                         .uid(UUID.randomUUID())
-                        .userUid(currentUserProvider.getUid())
+                        .userUid(userUid)
                         .title(newMemoDto.title())
                         .build()
         );
 
-        return toNoteDto(memo);
+        return toMemoDto(memo);
     }
 
     @Override
     @Transactional
-    public MemoDto updateNote(MemoDto memoDto) {
+    public MemoDto updateMemo(MemoDto memoDto) {
         Memo memo = memoRepository.findByUid(memoDto.uid())
                 .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
 
-        updateNotePost(memo, memoDto.post());
+        updateMemoPost(memo, memoDto.post());
 
-        return toNoteDto(memo);
+        return toMemoDto(memo);
     }
 
     @Transactional
-    public void deleteNote(UUID noteUid) {
+    public void deleteMemo(UUID noteUid) {
         memoRepository.deleteByUid(noteUid);
     }
 
     // Page || Slice 고민중
-    public List<MemoDto> getUserNotes() {
+    public List<MemoDto> getUserMemo() {
         return List.of();
     }
 
     /*----private 메소드----*/
 
-    private void updateNotePost(Memo memo, PostDto postDto) {
+    private void updateMemoPost(Memo memo, PostDto postDto) {
         if (postDto == null) {
             memo.setPost(null);
             return;
@@ -83,7 +88,7 @@ public class MemoServiceImpl implements MemoService {
         return newPost;
     }
 
-    private MemoDto toNoteDto(Memo memo) {
+    private MemoDto toMemoDto(Memo memo) {
         return MemoDto.from(memo);
     }
 
@@ -91,5 +96,11 @@ public class MemoServiceImpl implements MemoService {
         post.setContent(postDto.content());
         post.setImages(postDto.images());
         post.setFiles(postDto.files());
+    }
+
+    private void validateUserExists(UUID userUid) {
+        if (!userReader.existsByUid(userUid)) {
+            throw new BusinessException(MemoErrorCode.USER_UID_NOT_FOUND);
+        }
     }
 }

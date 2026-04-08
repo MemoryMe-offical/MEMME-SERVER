@@ -21,18 +21,18 @@ public class NoteController implements MemoApi {
                 ResponseWrapper.ok(
                     201,
                     "생성 성공",
-                    memoService.createNote(newNote)
+                    memoService.createMemo(newNote)
                 )
         );
     }
 
     @Override
-    public ResponseEntity<ResponseWrapper<MemoDto>> updateNote(MemoDto memoDto) {
+    public ResponseEntity<ResponseWrapper<MemoDto>> updateMemo(MemoDto memoDto) {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ResponseWrapper.ok(
-                        201,
+                        200,
                         "수정 성공",
-                        memoService.updateNote(memoDto)
+                        memoService.updateMemo(memoDto)
                 )
         );
     }
