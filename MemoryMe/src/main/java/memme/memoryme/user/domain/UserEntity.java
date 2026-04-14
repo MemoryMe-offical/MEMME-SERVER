@@ -8,16 +8,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-/*
-todo: 무슨 컬럼을 기준으로 인덱스를 생성할건지 정하고 수정 필요
-현재 user 컬럼이 없는데 user컬럼을 기준으로 인덱스를 생성하려 해서 하이버네이트 오류 발생중.
-*/
-@Table(name = "user"
-        /*
-        indexes = {
-        @Index(name = "idx_user", columnList = "user")}
-        */
-)
+@Table(name = "user", indexes = {
+        @Index(name = "idx_user_email", columnList = "email")
+})
+
 @Getter
 @Setter
 @Builder

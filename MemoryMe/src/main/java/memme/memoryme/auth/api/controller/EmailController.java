@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import memme.memoryme.auth.api.dto.email.*;
 import memme.memoryme.auth.application.service.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,5 +28,4 @@ public class EmailController {
                         request.getEmail())
         );
     }
-
 }
