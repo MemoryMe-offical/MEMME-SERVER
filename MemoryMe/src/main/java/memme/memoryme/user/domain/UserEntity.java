@@ -37,6 +37,9 @@ public class UserEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String userName;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

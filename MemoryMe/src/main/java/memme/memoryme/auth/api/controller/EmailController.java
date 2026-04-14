@@ -8,13 +8,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/auth")
+@RequestMapping("/v1/email")
 @RequiredArgsConstructor
 public class EmailController {
 
     private final AuthService authService;
 
-    @PostMapping("/email/request")
+    @PostMapping("/request")
     public ResponseEntity<EmailResponseDTO> requestEmailVerification(@RequestBody EmailRequestDTO request) {
         authService.requestEmailVerification(request.getEmail());
         return ResponseEntity.ok(new EmailResponseDTO("인증 코드 이메일로 발송",
@@ -22,7 +22,7 @@ public class EmailController {
         );
     }
 
-    @PostMapping("/email/verify")
+    @PostMapping("/verify")
     public ResponseEntity<VerifyEmailResponseDTO> verifyEmail(@RequestBody VerifyEmailRequestDTO request) {
         authService.verifyEmail(request.getEmail(), request.getCode());
         return ResponseEntity.ok(new VerifyEmailResponseDTO("이메일 인증 완료",
@@ -30,27 +30,4 @@ public class EmailController {
         );
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDTO> completeRegistration(@RequestBody RegisterRequestDTO request) {
-        authService.completeRegistration(request.getEmail(), request.getPassword());
-        return ResponseEntity.ok(new RegisterResponseDTO("회원가입 완료",
-                request.getEmail())
-        );
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO request) {
-        LoginResponseDTO response = authService.login(request.getEmail(), request.getPassword());
-        return ResponseEntity.ok(response);
-    }
-
-    @PatchMapping("/pwchange")
-    public ResponseEntity<PwChangeResponseDTO> changePassword(@RequestBody PwChangeRequestDTO request,
-                                                              Authentication authentication) {
-        String email = authentication.getName();
-        authService.changePassword(email,
-                request.getCurrentPassword(),
-                request.getNewPassword());
-        return ResponseEntity.ok(new PwChangeResponseDTO(email, "비밀번호 변경 완료"));
-    }
 }
