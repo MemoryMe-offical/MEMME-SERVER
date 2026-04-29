@@ -35,8 +35,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${GMAIL_USERNAME}
-    password: ${GMAIL_APP_PASSWORD}
+    username: ${GMAIL_USERNAME:}
+    password: ${GMAIL_APP_PASSWORD:}
     protocol: smtp
     tls: true
     properties:
@@ -52,8 +52,8 @@ spring:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            redirect-uri: ${KAKAO_REDIRECT_URI}
+            client-id: ${KAKAO_CLIENT_ID:}
+            redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/login/code/kakao}
             client-authentication-method: POST
             authorization-grant-type: authorization_code
 
@@ -70,7 +70,7 @@ spring:
             user-name-attribute: id
 
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:8080}
 
 springdoc:
   swagger-ui:

@@ -1,9 +1,14 @@
 package memme.memoryme.memo.application.service;
 
-import memme.memoryme.memo.api.dto.memo.NewMemoDto;
-import memme.memoryme.memo.api.dto.memo.MemoDto;
+import memme.memoryme.board.api.dto.BoardDto;
+import memme.memoryme.memo.api.dto.memo.*;
+
+import java.util.UUID;
 
 public interface MemoService {
-    MemoDto createMemo(NewMemoDto newMemoDto);
-    MemoDto updateMemo(MemoDto memoDto);
+    MemoDto createMemo(NewMemoDto request);
+    void deleteMemo(UUID memoUid);
+    MemoDto updateBookmark(UUID memoUid, BookmarkRequest request);
+    BoardDto convertToNewBoard(UUID memoUid, ConvertMemoToNewBoardRequest request);
+    BoardDto convertToExistingBoard(UUID memoUid, UUID boardUid, ConvertMemoToExistingBoardRequest request);
 }
