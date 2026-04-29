@@ -7,14 +7,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "memo", indexes = {
-        @Index(name = "idx_user_uid", columnList = "user_uid")
+@Table(name = "quick_memo", indexes = {
+        @Index(name = "idx_memo_user_uid", columnList = "user_uid"),
+        @Index(name = "idx_memo_user_created_at", columnList = "user_uid, created_at")
 })
-@Builder
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Memo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,35 +23,29 @@ public class Memo {
     @Column(nullable = false, unique = true, updatable = false)
     private UUID uid;
 
-    // todo: 서비스단에서의 검증 필요
-    @Column(name = "user_uid", nullable = false)
+    @Column(name = "user_uid", nullable = false, updatable = false)
     private UUID userUid;
-    private String title;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "note_post_id")
-    private Post post;
+    @Column(nullable = false, length = 2000)
+    private String text;
 
     @Column(nullable = false)
-    private LocalDateTime created;
-    @Column(nullable = false)
-    private LocalDateTime updated;
+    private boolean bookmarked;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public void changeBookmarked(boolean bookmarked) {
+        this.bookmarked = bookmarked;
+    }
 
     @PrePersist
     void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-
-        if (created == null) {
-            created = now;
+        if (uid == null) {
+            uid = UUID.randomUUID();
         }
-
-        if (updated == null) {
-            updated = now;
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updated = LocalDateTime.now();
     }
 }

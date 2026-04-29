@@ -2,9 +2,9 @@ package memme.memoryme.memo.api.dto.memo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(name = "메모 생성 DTO")
+@Schema(description = "메모 생성 요청 DTO")
 public record NewMemoDto(
-        @Schema(description = "내용", example = "오늘 회의 정리")
-        String title
+        @Schema(description = "빠르게 남기는 메모 내용", example = "코딩 공부하기")
+        String text
 ) {
 }
