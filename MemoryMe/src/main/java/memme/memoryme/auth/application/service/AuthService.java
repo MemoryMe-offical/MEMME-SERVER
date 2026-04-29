@@ -40,7 +40,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void completeRegistration(String email, String password) {
+    public void completeRegistration(String email, String password, String userName) {
         EmailVerificationEntity verification =
                 emailVerificationRepository.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException("인증 요청이 존재하지 않습니다."));
@@ -58,6 +58,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(password))
                 .uid(UUID.randomUUID())
                 .emailVerified(true)
+                .userName(userName)
                 .build();
         userRepository.save(user);
         emailVerificationRepository.delete(verification);
@@ -73,16 +74,5 @@ public class AuthService {
         }
         String token = jwtUtil.createToken(user.getEmail(), user.getUid().toString());
         return new LoginResponseDTO(token);
-    }
-
-    @Transactional
-    public void changePassword(String email, String currentPassword, String newPassword) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
-
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new RuntimeException("현재 비밀번호가 올바르지 않습니다.");
-        }
-        user.setPassword(passwordEncoder.encode(newPassword));
     }
 }

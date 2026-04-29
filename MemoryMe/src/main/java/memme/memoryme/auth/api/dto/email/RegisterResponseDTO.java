@@ -10,4 +10,5 @@ import lombok.Setter;
 public class RegisterResponseDTO {
     private String message;
     private String email;
+    private String userName;
 }
