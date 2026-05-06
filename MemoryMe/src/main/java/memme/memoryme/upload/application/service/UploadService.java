@@ -11,4 +11,5 @@ public interface UploadService {
     ImageUploadResponse uploadImages(List<MultipartFile> files);
     VideoUploadResponse uploadVideo(MultipartFile file);
     FileUploadResponse uploadFile(MultipartFile file);
+    String createReadUrl(String key);
 }

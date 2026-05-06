@@ -2,13 +2,16 @@ package memme.memoryme.note.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "note_attachment", indexes = {
-        @Index(name = "idx_attachment_note_id", columnList = "note_id")
+        @Index(name = "idx_attachment_note_id", columnList = "note_id"),
+        @Index(name = "idx_attachment_user_uid", columnList = "user_uid")
 })
 @Getter
 @Builder
@@ -26,15 +29,28 @@ public class NoteAttachment {
     @JoinColumn(name = "note_id")
     private Note note;
 
+    @Column(name = "user_uid")
+    private UUID userUid;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20)")
     private AttachmentType type;
 
     @Column(name = "original_name")
     private String originalName;
 
+    @Column(name = "stored_name")
+    private String storedName;
+
     @Column(nullable = false, length = 2048)
     private String url;
+
+    @Column(name = "bucket")
+    private String bucket;
+
+    @Column(name = "s3_key", length = 512)
+    private String s3Key;
 
     @Column(name = "mime_type")
     private String mimeType;
@@ -48,11 +64,21 @@ public class NoteAttachment {
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20)")
+    @Builder.Default
+    private AttachmentStatus status = AttachmentStatus.ATTACHED;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public void assignNote(Note note) {
         this.note = note;
+    }
+
+    public void markDeleted() {
+        this.status = AttachmentStatus.DELETED;
     }
 
     @PrePersist
@@ -62,6 +88,9 @@ public class NoteAttachment {
         }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = AttachmentStatus.ATTACHED;
         }
     }
 }

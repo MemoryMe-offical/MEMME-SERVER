@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @Tag(name = "Memo API", description = "빠른 메모 API")
-@RequestMapping("/v1/memos")
+@RequestMapping({"/v1/memos", "/v1/memo"})
 public interface MemoApi {
     @Operation(summary = "메모 생성")
     @PostMapping
@@ -33,7 +33,7 @@ public interface MemoApi {
     ResponseEntity<ResponseWrapper<MemoDto>> updateBookmark(
             @Parameter(description = "메모 UID")
             @PathVariable UUID memoUid,
-            @RequestBody BookmarkRequest request
+            @RequestBody(required = false) BookmarkRequest request
     );
 
     @Operation(summary = "메모를 새 보드로 변환")
@@ -48,6 +48,6 @@ public interface MemoApi {
     ResponseEntity<ResponseWrapper<BoardDto>> convertToExistingBoard(
             @PathVariable UUID memoUid,
             @PathVariable UUID boardUid,
-            @RequestBody ConvertMemoToExistingBoardRequest request
+            @RequestBody(required = false) ConvertMemoToExistingBoardRequest request
     );
 }

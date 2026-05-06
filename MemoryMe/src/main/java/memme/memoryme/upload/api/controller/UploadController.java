@@ -8,11 +8,13 @@ import memme.memoryme.upload.api.dto.FileUploadResponse;
 import memme.memoryme.upload.api.dto.ImageUploadResponse;
 import memme.memoryme.upload.api.dto.VideoUploadResponse;
 import memme.memoryme.upload.application.service.UploadService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.List;
 
 @Tag(name = "Upload API", description = "이미지·영상·파일 업로드 API")
@@ -38,5 +40,13 @@ public class UploadController {
     @PostMapping(value = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseWrapper<FileUploadResponse>> uploadFile(@RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseWrapper.ok(200, "파일 업로드 성공", uploadService.uploadFile(file)));
+    }
+
+    @Operation(summary = "S3 객체 접근 URL 리다이렉트")
+    @GetMapping("/object")
+    public ResponseEntity<Void> redirectObject(@RequestParam("key") String key) {
+        return ResponseEntity.status(302)
+                .header(HttpHeaders.LOCATION, URI.create(uploadService.createReadUrl(key)).toString())
+                .build();
     }
 }

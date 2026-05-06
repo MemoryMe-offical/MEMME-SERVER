@@ -40,7 +40,7 @@ public interface BoardApi {
     @PatchMapping("/{boardUid}/bookmark")
     ResponseEntity<ResponseWrapper<BoardDto>> updateBookmark(
             @PathVariable UUID boardUid,
-            @RequestBody BoardBookmarkRequest request
+            @RequestBody(required = false) BoardBookmarkRequest request
     );
 
     @Operation(summary = "노트 생성")

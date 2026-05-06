@@ -10,8 +10,10 @@ public record FileUploadResponse(
         UUID uid,
         @Schema(description = "원본 파일명")
         String name,
-        @Schema(description = "파일 URL")
+        @Schema(description = "파일 접근 URL")
         String url,
+        @Schema(description = "S3 객체 key")
+        String key,
         @Schema(description = "MIME 타입")
         String mimeType,
         @Schema(description = "파일 크기(bytes)")

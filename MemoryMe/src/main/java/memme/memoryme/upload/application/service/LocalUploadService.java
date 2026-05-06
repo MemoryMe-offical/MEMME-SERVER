@@ -6,6 +6,7 @@ import memme.memoryme.global.exception.CommonErrorCode;
 import memme.memoryme.upload.api.dto.FileUploadResponse;
 import memme.memoryme.upload.api.dto.ImageUploadResponse;
 import memme.memoryme.upload.api.dto.VideoUploadResponse;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Profile("local-upload")
 @RequiredArgsConstructor
 public class LocalUploadService implements UploadService {
     private static final Path UPLOAD_ROOT = Path.of("uploads");
@@ -28,14 +30,15 @@ public class LocalUploadService implements UploadService {
         return new ImageUploadResponse(
                 files.stream()
                         .map(file -> store(file, "images"))
-                        .toList()
+                        .toList(),
+                List.of()
         );
     }
 
     @Override
     public VideoUploadResponse uploadVideo(MultipartFile file) {
         StoredFile storedFile = storeFile(file, "videos");
-        return new VideoUploadResponse(storedFile.url(), null, null, storedFile.size());
+        return new VideoUploadResponse(storedFile.url(), null, null, null, storedFile.size());
     }
 
     @Override
@@ -45,6 +48,7 @@ public class LocalUploadService implements UploadService {
                 storedFile.uid(),
                 storedFile.originalName(),
                 storedFile.url(),
+                null,
                 storedFile.mimeType(),
                 storedFile.size()
         );
@@ -79,6 +83,14 @@ public class LocalUploadService implements UploadService {
         } catch (IOException e) {
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public String createReadUrl(String key) {
+        if (key == null || key.isBlank()) {
+            throw new BusinessException(CommonErrorCode.BAD_REQUEST);
+        }
+        return key;
     }
 
     private String extension(String originalName) {
