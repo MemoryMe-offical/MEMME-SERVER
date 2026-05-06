@@ -13,6 +13,7 @@ import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
 import memme.memoryme.note.infra.repository.NoteRepository;
+import memme.memoryme.upload.application.service.S3ObjectUrlBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +26,16 @@ public class BoardServiceImpl implements BoardService {
     private final NoteRepository noteRepository;
     private final CurrentUserProvider currentUserProvider;
     private final UserReader userReader;
+    private final S3ObjectUrlBuilder objectUrlBuilder;
 
     @Override
     @Transactional
     public BoardDto createBoard(CreateBoardRequest request) {
         UUID userUid = currentUserProvider.getUid();
         validateUserExists(userUid);
+        if (request == null) {
+            throw new BusinessException(BoardErrorCode.INVALID_BOARD_REQUEST);
+        }
         validateBoardTitle(request.title());
 
         Board board = Board.builder()
@@ -42,19 +47,21 @@ public class BoardServiceImpl implements BoardService {
                 .bookmarked(false)
                 .build();
 
-        return BoardDto.from(boardRepository.save(board));
+        return BoardDto.from(boardRepository.saveAndFlush(board));
     }
 
     @Override
     @Transactional(readOnly = true)
     public BoardDto getBoard(UUID boardUid) {
-        Board board = getCurrentUserBoard(boardUid);
-        return BoardDto.from(board);
+        return BoardDto.from(getCurrentUserBoard(boardUid));
     }
 
     @Override
     @Transactional
     public BoardDto updateBoard(UUID boardUid, UpdateBoardRequest request) {
+        if (request == null) {
+            throw new BusinessException(BoardErrorCode.INVALID_BOARD_REQUEST);
+        }
         Board board = getCurrentUserBoard(boardUid);
         validateBoardTitle(request.title());
 
@@ -63,6 +70,7 @@ public class BoardServiceImpl implements BoardService {
                 blankToNull(request.description()),
                 normalizeTags(request.tags())
         );
+        boardRepository.flush();
         return BoardDto.from(board);
     }
 
@@ -79,13 +87,17 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public BoardDto updateBookmark(UUID boardUid, BoardBookmarkRequest request) {
         Board board = getCurrentUserBoard(boardUid);
-        board.changeBookmarked(request.valueOrFalse());
+        board.changeBookmarked(request != null && request.valueOrFalse());
+        boardRepository.flush();
         return BoardDto.from(board);
     }
 
     @Override
     @Transactional
     public NoteDto createNote(UUID boardUid, CreateNoteRequest request) {
+        if (request == null) {
+            throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
+        }
         Board board = getCurrentUserBoard(boardUid);
         validateNoteTitle(request.title());
 
@@ -98,17 +110,20 @@ public class BoardServiceImpl implements BoardService {
                 .ogDescription(request.ogData() != null ? blankToNull(request.ogData().description()) : null)
                 .ogImageUrl(request.ogData() != null ? blankToNull(request.ogData().imageUrl()) : null)
                 .ogSiteName(request.ogData() != null ? blankToNull(request.ogData().siteName()) : null)
-                .sortOrder(board.nextSortOrder())
                 .build();
 
-        note.replaceAttachments(toAttachments(request.imageUris(), request.videoUris(), request.files()));
+        note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.addNote(note);
+        boardRepository.flush();
         return NoteDto.from(note);
     }
 
     @Override
     @Transactional
     public NoteDto updateNote(UUID boardUid, UUID noteUid, UpdateNoteRequest request) {
+        if (request == null) {
+            throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
+        }
         Board board = getCurrentUserBoard(boardUid);
         Note note = findNote(board, noteUid);
         validateNoteTitle(request.title());
@@ -122,8 +137,9 @@ public class BoardServiceImpl implements BoardService {
                 request.ogData() != null ? blankToNull(request.ogData().imageUrl()) : null,
                 request.ogData() != null ? blankToNull(request.ogData().siteName()) : null
         );
-        note.replaceAttachments(toAttachments(request.imageUris(), request.videoUris(), request.files()));
+        note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.touch();
+        boardRepository.flush();
         return NoteDto.from(note);
     }
 
@@ -134,24 +150,27 @@ public class BoardServiceImpl implements BoardService {
         Note note = findNote(board, noteUid);
         board.removeNote(note);
         noteRepository.delete(note);
+        boardRepository.flush();
     }
 
     @Override
     @Transactional
     public MoveNoteResponse moveNote(UUID sourceBoardUid, UUID noteUid, MoveNoteRequest request) {
-        if (request.targetBoardUid() == null) {
+        UUID targetBoardUid = request == null ? null : request.resolvedTargetBoardUid();
+        if (targetBoardUid == null) {
             throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
         }
-        if (sourceBoardUid.equals(request.targetBoardUid())) {
+        if (sourceBoardUid.equals(targetBoardUid)) {
             throw new BusinessException(BoardErrorCode.SAME_BOARD_MOVE_NOT_ALLOWED);
         }
 
         Board sourceBoard = getCurrentUserBoard(sourceBoardUid);
-        Board targetBoard = getCurrentUserBoard(request.targetBoardUid());
+        Board targetBoard = getCurrentUserBoard(targetBoardUid);
         Note note = findNote(sourceBoard, noteUid);
 
         sourceBoard.removeNote(note);
         targetBoard.addNote(note);
+        boardRepository.flush();
 
         return new MoveNoteResponse(BoardDto.from(sourceBoard), BoardDto.from(targetBoard));
     }
@@ -209,42 +228,108 @@ public class BoardServiceImpl implements BoardService {
         return normalized;
     }
 
-    private List<NoteAttachment> toAttachments(List<String> imageUris, List<String> videoUris, List<FileAttachmentDto> files) {
+    private List<NoteAttachment> toAttachments(
+            UUID userUid,
+            List<String> imageUris,
+            List<String> imageKeys,
+            List<String> videoUris,
+            List<String> videoKeys,
+            List<FileAttachmentDto> files
+    ) {
         List<NoteAttachment> attachments = new ArrayList<>();
 
-        if (imageUris != null) {
-            if (imageUris.size() > 10) {
-                throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
-            }
-            imageUris.stream()
-                    .filter(url -> url != null && !url.isBlank())
-                    .map(url -> NoteAttachment.builder()
-                            .uid(UUID.randomUUID())
-                            .type(AttachmentType.IMAGE)
-                            .url(url.trim())
-                            .build())
-                    .forEach(attachments::add);
-        }
-
-        if (videoUris != null) {
-            videoUris.stream()
-                    .filter(url -> url != null && !url.isBlank())
-                    .map(url -> NoteAttachment.builder()
-                            .uid(UUID.randomUUID())
-                            .type(AttachmentType.VIDEO)
-                            .url(url.trim())
-                            .build())
-                    .forEach(attachments::add);
-        }
+        addUrlAttachments(attachments, userUid, AttachmentType.IMAGE, imageUris, null);
+        addKeyAttachments(attachments, userUid, AttachmentType.IMAGE, imageKeys);
+        addUrlAttachments(attachments, userUid, AttachmentType.VIDEO, videoUris, null);
+        addKeyAttachments(attachments, userUid, AttachmentType.VIDEO, videoKeys);
 
         if (files != null) {
             files.stream()
-                    .filter(file -> file != null && file.url() != null && !file.url().isBlank())
-                    .map(file -> file.toEntity(AttachmentType.FILE))
+                    .filter(file -> file != null && ((file.url() != null && !file.url().isBlank()) || (file.key() != null && !file.key().isBlank())))
+                    .map(file -> normalizeFileAttachment(file, userUid))
                     .forEach(attachments::add);
         }
 
+        long imageCount = attachments.stream().filter(attachment -> attachment.getType() == AttachmentType.IMAGE).count();
+        if (imageCount > 10) {
+            throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
+        }
+
         return attachments;
+    }
+
+    private void addUrlAttachments(List<NoteAttachment> attachments, UUID userUid, AttachmentType type, List<String> urls, String originalName) {
+        if (urls == null) {
+            return;
+        }
+        urls.stream()
+                .filter(url -> url != null && !url.isBlank())
+                .map(url -> NoteAttachment.builder()
+                        .uid(UUID.randomUUID())
+                        .userUid(userUid)
+                        .type(type)
+                        .originalName(originalName)
+                        .url(url.trim())
+                        .s3Key(extractKeyFromObjectUrl(url.trim()))
+                        .build())
+                .forEach(attachments::add);
+    }
+
+    private void addKeyAttachments(List<NoteAttachment> attachments, UUID userUid, AttachmentType type, List<String> keys) {
+        if (keys == null) {
+            return;
+        }
+        keys.stream()
+                .filter(key -> key != null && !key.isBlank())
+                .map(key -> key.trim())
+                .map(key -> NoteAttachment.builder()
+                        .uid(UUID.randomUUID())
+                        .userUid(userUid)
+                        .type(type)
+                        .url(objectUrlBuilder.build(key))
+                        .s3Key(key)
+                        .build())
+                .forEach(attachments::add);
+    }
+
+    private NoteAttachment normalizeFileAttachment(FileAttachmentDto file, UUID userUid) {
+        String key = blankToNull(file.key());
+        String url = blankToNull(file.url());
+        if (url == null && key != null) {
+            url = objectUrlBuilder.build(key);
+        }
+        if (key == null && url != null) {
+            key = extractKeyFromObjectUrl(url);
+        }
+        return NoteAttachment.builder()
+                .uid(file.uid() != null ? file.uid() : UUID.randomUUID())
+                .userUid(userUid)
+                .type(AttachmentType.FILE)
+                .originalName(blankToNull(file.name()))
+                .url(url)
+                .s3Key(key)
+                .mimeType(blankToNull(file.mimeType()))
+                .sizeBytes(file.size())
+                .thumbnailUrl(blankToNull(file.thumbnailUrl()))
+                .durationSeconds(file.duration())
+                .build();
+    }
+
+    private String extractKeyFromObjectUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        String marker = "key=";
+        int index = url.indexOf(marker);
+        if (index < 0) {
+            return null;
+        }
+        String encodedKey = url.substring(index + marker.length());
+        int ampIndex = encodedKey.indexOf('&');
+        if (ampIndex >= 0) {
+            encodedKey = encodedKey.substring(0, ampIndex);
+        }
+        return java.net.URLDecoder.decode(encodedKey, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private String blankToNull(String value) {

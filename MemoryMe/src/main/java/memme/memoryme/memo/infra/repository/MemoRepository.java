@@ -10,8 +10,10 @@ import java.util.UUID;
 
 @Repository
 public interface MemoRepository extends JpaRepository<Memo, Long> {
+    Optional<Memo> findByUid(UUID uid);
     Optional<Memo> findByUidAndUserUid(UUID uid, UUID userUid);
     boolean existsByUidAndUserUid(UUID uid, UUID userUid);
+    void deleteByUid(UUID uid);
     void deleteByUidAndUserUid(UUID uid, UUID userUid);
     List<Memo> findAllByUserUid(UUID userUid);
 }

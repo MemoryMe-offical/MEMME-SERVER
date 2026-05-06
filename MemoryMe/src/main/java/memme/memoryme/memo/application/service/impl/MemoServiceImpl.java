@@ -36,26 +36,26 @@ public class MemoServiceImpl implements MemoService {
     public MemoDto createMemo(NewMemoDto request) {
         UUID userUid = currentUserProvider.getUid();
         validateUserExists(userUid);
-        validateText(request.text());
+        String text = request == null ? null : request.resolvedText();
+        validateText(text);
 
         Memo memo = Memo.builder()
                 .uid(UUID.randomUUID())
                 .userUid(userUid)
-                .text(request.text().trim())
+                .text(text.trim())
                 .bookmarked(false)
                 .build();
 
-        return MemoDto.from(memoRepository.save(memo));
+        return MemoDto.from(memoRepository.saveAndFlush(memo));
     }
 
     @Override
     @Transactional
     public void deleteMemo(UUID memoUid) {
         UUID userUid = currentUserProvider.getUid();
-        if (!memoRepository.existsByUidAndUserUid(memoUid, userUid)) {
-            throw new BusinessException(MemoErrorCode.MEMO_NOT_FOUND);
-        }
-        memoRepository.deleteByUidAndUserUid(memoUid, userUid);
+        Memo memo = memoRepository.findByUidAndUserUid(memoUid, userUid)
+                .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
+        memoRepository.delete(memo);
     }
 
     @Override
@@ -65,13 +65,17 @@ public class MemoServiceImpl implements MemoService {
         Memo memo = memoRepository.findByUidAndUserUid(memoUid, userUid)
                 .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
 
-        memo.changeBookmarked(request.valueOrFalse());
+        memo.changeBookmarked(request != null && request.valueOrFalse());
         return MemoDto.from(memo);
     }
 
     @Override
     @Transactional
     public BoardDto convertToNewBoard(UUID memoUid, ConvertMemoToNewBoardRequest request) {
+        if (request == null) {
+            throw new BusinessException(BoardErrorCode.INVALID_BOARD_REQUEST);
+        }
+
         UUID userUid = currentUserProvider.getUid();
         validateUserExists(userUid);
         Memo memo = getCurrentUserMemo(memoUid, userUid);
@@ -87,8 +91,9 @@ public class MemoServiceImpl implements MemoService {
                 .build();
 
         board.addNote(createNoteFromMemo(memo, request.noteTitle(), request.content()));
-        Board savedBoard = boardRepository.save(board);
+        Board savedBoard = boardRepository.saveAndFlush(board);
         memoRepository.delete(memo);
+        memoRepository.flush();
         return BoardDto.from(savedBoard);
     }
 
@@ -100,8 +105,12 @@ public class MemoServiceImpl implements MemoService {
         Board board = boardRepository.findByUidAndUserUid(boardUid, userUid)
                 .orElseThrow(() -> new BusinessException(BoardErrorCode.BOARD_NOT_FOUND));
 
-        board.addNote(createNoteFromMemo(memo, request.noteTitle(), request.content()));
+        String noteTitle = request == null ? null : request.noteTitle();
+        String content = request == null ? null : request.content();
+        board.addNote(createNoteFromMemo(memo, noteTitle, content));
+        boardRepository.flush();
         memoRepository.delete(memo);
+        memoRepository.flush();
         return BoardDto.from(board);
     }
 
@@ -132,10 +141,7 @@ public class MemoServiceImpl implements MemoService {
     }
 
     private void validateText(String text) {
-        if (text == null || text.isBlank()) {
-            throw new BusinessException(MemoErrorCode.INVALID_MEMO_REQUEST);
-        }
-        if (text.length() > 2000) {
+        if (text == null || text.isBlank() || text.length() > 2000) {
             throw new BusinessException(MemoErrorCode.INVALID_MEMO_REQUEST);
         }
     }

@@ -12,8 +12,10 @@ public record FileAttachmentDto(
         UUID uid,
         @Schema(description = "원본 파일명", example = "기획서.pdf")
         String name,
-        @Schema(description = "파일 URL", example = "https://cdn.example.com/uploads/plan.pdf")
+        @Schema(description = "파일 접근 URL", example = "/v1/upload/object?key=memme/users/.../file.pdf")
         String url,
+        @Schema(description = "S3 객체 key")
+        String key,
         @Schema(description = "MIME 타입", example = "application/pdf")
         String mimeType,
         @Schema(description = "파일 크기(bytes)", example = "204800")
@@ -28,6 +30,7 @@ public record FileAttachmentDto(
                 attachment.getUid(),
                 attachment.getOriginalName(),
                 attachment.getUrl(),
+                attachment.getS3Key(),
                 attachment.getMimeType(),
                 attachment.getSizeBytes(),
                 attachment.getThumbnailUrl(),
@@ -36,11 +39,17 @@ public record FileAttachmentDto(
     }
 
     public NoteAttachment toEntity(AttachmentType type) {
+        return toEntity(type, null);
+    }
+
+    public NoteAttachment toEntity(AttachmentType type, UUID userUid) {
         return NoteAttachment.builder()
                 .uid(uid != null ? uid : UUID.randomUUID())
+                .userUid(userUid)
                 .type(type)
                 .originalName(name)
                 .url(url)
+                .s3Key(key)
                 .mimeType(mimeType)
                 .sizeBytes(size)
                 .thumbnailUrl(thumbnailUrl)
