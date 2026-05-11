@@ -8,6 +8,7 @@ import memme.memoryme.note.domain.NoteAttachment;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Schema(description = "첨부파일 응답 DTO")
 public record AttachmentDto(
@@ -37,13 +38,17 @@ public record AttachmentDto(
         LocalDateTime createdAt
 ) {
     public static AttachmentDto from(NoteAttachment attachment) {
+        return from(attachment, null);
+    }
+
+    public static AttachmentDto from(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {
         Note note = attachment.getNote();
         Board board = note == null ? null : note.getBoard();
         return new AttachmentDto(
                 attachment.getUid(),
                 attachment.getType(),
                 attachment.getOriginalName(),
-                attachment.getUrl(),
+                urlResolver == null ? attachment.getUrl() : urlResolver.apply(attachment),
                 attachment.getS3Key(),
                 attachment.getMimeType(),
                 attachment.getSizeBytes(),

@@ -14,6 +14,8 @@ import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.memo.exception.MemoErrorCode;
 import memme.memoryme.memo.infra.repository.MemoRepository;
 import memme.memoryme.note.domain.Note;
+import memme.memoryme.note.domain.NoteAttachment;
+import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class MemoServiceImpl implements MemoService {
     private final BoardRepository boardRepository;
     private final CurrentUserProvider currentUserProvider;
     private final UserReader userReader;
+    private final UploadService uploadService;
 
     @Override
     @Transactional
@@ -94,7 +97,7 @@ public class MemoServiceImpl implements MemoService {
         Board savedBoard = boardRepository.saveAndFlush(board);
         memoRepository.delete(memo);
         memoRepository.flush();
-        return BoardDto.from(savedBoard);
+        return BoardDto.from(savedBoard, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -111,7 +114,7 @@ public class MemoServiceImpl implements MemoService {
         boardRepository.flush();
         memoRepository.delete(memo);
         memoRepository.flush();
-        return BoardDto.from(board);
+        return BoardDto.from(board, this::resolveAttachmentUrl);
     }
 
     private Memo getCurrentUserMemo(UUID memoUid, UUID userUid) {
@@ -175,5 +178,12 @@ public class MemoServiceImpl implements MemoService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String resolveAttachmentUrl(NoteAttachment attachment) {
+        if (attachment.getS3Key() == null || attachment.getS3Key().isBlank()) {
+            return attachment.getUrl();
+        }
+        return uploadService.createReadUrl(attachment.getS3Key());
     }
 }

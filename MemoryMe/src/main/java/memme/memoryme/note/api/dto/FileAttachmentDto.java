@@ -5,6 +5,7 @@ import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.NoteAttachment;
 
 import java.util.UUID;
+import java.util.function.Function;
 
 @Schema(description = "첨부 파일 DTO")
 public record FileAttachmentDto(
@@ -26,10 +27,14 @@ public record FileAttachmentDto(
         Integer duration
 ) {
     public static FileAttachmentDto from(NoteAttachment attachment) {
+        return from(attachment, null);
+    }
+
+    public static FileAttachmentDto from(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {
         return new FileAttachmentDto(
                 attachment.getUid(),
                 attachment.getOriginalName(),
-                attachment.getUrl(),
+                urlResolver == null ? attachment.getUrl() : urlResolver.apply(attachment),
                 attachment.getS3Key(),
                 attachment.getMimeType(),
                 attachment.getSizeBytes(),

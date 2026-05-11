@@ -3,10 +3,12 @@ package memme.memoryme.board.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import memme.memoryme.board.domain.Board;
 import memme.memoryme.note.api.dto.NoteDto;
+import memme.memoryme.note.domain.NoteAttachment;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Schema(description = "보드 응답 DTO")
 public record BoardDto(
@@ -30,13 +32,17 @@ public record BoardDto(
         LocalDateTime updatedAt
 ) {
     public static BoardDto from(Board board) {
+        return from(board, null);
+    }
+
+    public static BoardDto from(Board board, Function<NoteAttachment, String> attachmentUrlResolver) {
         return new BoardDto(
                 board.getUid(),
                 "board",
                 board.getTitle(),
                 board.getDescription(),
                 List.copyOf(board.getTags()),
-                board.getNotes().stream().map(NoteDto::from).toList(),
+                board.getNotes().stream().map(note -> NoteDto.from(note, attachmentUrlResolver)).toList(),
                 board.isBookmarked(),
                 board.getCreatedAt(),
                 board.getUpdatedAt()

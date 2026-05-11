@@ -8,11 +8,11 @@ import java.util.List;
 public record TimelineResponse(
         @Schema(description = "메모와 보드가 섞인 타임라인 항목")
         List<Object> items,
-        @Schema(description = "전체 개수", example = "120")
-        long total,
-        @Schema(description = "현재 페이지", example = "1")
-        int page,
-        @Schema(description = "페이지 크기", example = "50")
+        @Schema(description = "다음 slice 존재 여부", example = "true")
+        boolean hasNext,
+        @Schema(description = "다음 slice 조회용 cursor")
+        String nextCursor,
+        @Schema(description = "요청 slice 크기", example = "50")
         int limit
 ) {
 }
