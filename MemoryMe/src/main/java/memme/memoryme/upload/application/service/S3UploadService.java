@@ -214,7 +214,7 @@ public class S3UploadService implements UploadService {
                     .filter(object -> !object.key().endsWith("/"))
                     .map(object -> new UploadObjectDto(
                             directory,
-                            objectUrlBuilder.build(object.key()),
+                            createReadUrl(object.key()),
                             object.key(),
                             object.size(),
                             object.lastModified()

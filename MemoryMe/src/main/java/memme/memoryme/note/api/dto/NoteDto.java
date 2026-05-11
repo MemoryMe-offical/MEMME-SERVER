@@ -56,7 +56,7 @@ public record NoteDto(
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.IMAGE)
-                        .map(NoteAttachment::getS3Key)
+                        .map(NoteDto::resolveKey)
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.IMAGE)
@@ -68,7 +68,7 @@ public record NoteDto(
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
-                        .map(NoteAttachment::getS3Key)
+                        .map(NoteDto::resolveKey)
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
@@ -87,5 +87,23 @@ public record NoteDto(
 
     private static String resolveUrl(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {
         return urlResolver == null ? attachment.getUrl() : urlResolver.apply(attachment);
+    }
+
+    private static String resolveKey(NoteAttachment attachment) {
+        if (attachment.getS3Key() != null && !attachment.getS3Key().isBlank()) {
+            return attachment.getS3Key();
+        }
+        String url = attachment.getUrl();
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        String normalized = url.trim();
+        if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("/")) {
+            return null;
+        }
+        return normalized.contains("/users/")
+                && (normalized.contains("/images/") || normalized.contains("/videos/") || normalized.contains("/files/"))
+                ? normalized
+                : null;
     }
 }
