@@ -14,6 +14,7 @@ import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
 import memme.memoryme.note.infra.repository.NoteRepository;
 import memme.memoryme.upload.application.service.S3ObjectUrlBuilder;
+import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class BoardServiceImpl implements BoardService {
     private final CurrentUserProvider currentUserProvider;
     private final UserReader userReader;
     private final S3ObjectUrlBuilder objectUrlBuilder;
+    private final UploadService uploadService;
 
     @Override
     @Transactional
@@ -47,13 +49,13 @@ public class BoardServiceImpl implements BoardService {
                 .bookmarked(false)
                 .build();
 
-        return BoardDto.from(boardRepository.saveAndFlush(board));
+        return BoardDto.from(boardRepository.saveAndFlush(board), this::resolveAttachmentUrl);
     }
 
     @Override
     @Transactional(readOnly = true)
     public BoardDto getBoard(UUID boardUid) {
-        return BoardDto.from(getCurrentUserBoard(boardUid));
+        return BoardDto.from(getCurrentUserBoard(boardUid), this::resolveAttachmentUrl);
     }
 
     @Override
@@ -71,7 +73,7 @@ public class BoardServiceImpl implements BoardService {
                 normalizeTags(request.tags())
         );
         boardRepository.flush();
-        return BoardDto.from(board);
+        return BoardDto.from(board, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -89,7 +91,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = getCurrentUserBoard(boardUid);
         board.changeBookmarked(request != null && request.valueOrFalse());
         boardRepository.flush();
-        return BoardDto.from(board);
+        return BoardDto.from(board, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -115,7 +117,7 @@ public class BoardServiceImpl implements BoardService {
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.addNote(note);
         boardRepository.flush();
-        return NoteDto.from(note);
+        return NoteDto.from(note, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -140,7 +142,7 @@ public class BoardServiceImpl implements BoardService {
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.touch();
         boardRepository.flush();
-        return NoteDto.from(note);
+        return NoteDto.from(note, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -172,7 +174,7 @@ public class BoardServiceImpl implements BoardService {
         targetBoard.addNote(note);
         boardRepository.flush();
 
-        return new MoveNoteResponse(BoardDto.from(sourceBoard), BoardDto.from(targetBoard));
+        return new MoveNoteResponse(BoardDto.from(sourceBoard, this::resolveAttachmentUrl), BoardDto.from(targetBoard, this::resolveAttachmentUrl));
     }
 
     private Board getCurrentUserBoard(UUID boardUid) {
@@ -334,5 +336,12 @@ public class BoardServiceImpl implements BoardService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String resolveAttachmentUrl(NoteAttachment attachment) {
+        if (attachment.getS3Key() == null || attachment.getS3Key().isBlank()) {
+            return attachment.getUrl();
+        }
+        return uploadService.createReadUrl(attachment.getS3Key());
     }
 }

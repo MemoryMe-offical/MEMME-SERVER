@@ -9,13 +9,17 @@ import memme.memoryme.memo.api.dto.memo.MemoDto;
 import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.memo.infra.repository.MemoRepository;
 import memme.memoryme.note.domain.Note;
+import memme.memoryme.note.domain.NoteAttachment;
 import memme.memoryme.timeline.api.dto.TimelineResponse;
 import memme.memoryme.global.exception.BusinessException;
 import memme.memoryme.timeline.exception.TimelineErrorCode;
+import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -24,17 +28,18 @@ public class TimelineService {
     private final MemoRepository memoRepository;
     private final BoardRepository boardRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final UploadService uploadService;
 
     @Transactional(readOnly = true)
-    public TimelineResponse getTimeline(String type, String tags, String q, String sort, Integer page, Integer limit, UUID excludeId) {
+    public TimelineResponse getTimeline(String type, String tags, String q, String sort, String cursor, Integer limit, UUID excludeId) {
         UUID userUid = currentUserProvider.getUid();
-        int normalizedPage = page == null || page < 1 ? 1 : page;
         int normalizedLimit = limit == null || limit < 1 ? 50 : Math.min(limit, 100);
         String normalizedType = normalize(type);
         String keyword = normalize(q);
         Set<String> tagSet = parseTags(tags);
         validateType(normalizedType);
         validateSort(sort);
+        TimelineCursor decodedCursor = decodeCursor(cursor);
 
         List<TimelineItem> items = new ArrayList<>();
 
@@ -43,7 +48,7 @@ public class TimelineService {
                 memoRepository.findAllByUserUid(userUid).stream()
                         .filter(memo -> excludeId == null || !memo.getUid().equals(excludeId))
                         .filter(memo -> keyword == null || contains(memo.getText(), keyword))
-                        .map(memo -> new TimelineItem(MemoDto.from(memo), "memo", memo.getCreatedAt(), memo.getCreatedAt()))
+                        .map(memo -> new TimelineItem(MemoDto.from(memo), memo.getUid(), memo.getCreatedAt(), memo.getCreatedAt()))
                         .forEach(items::add);
             }
         }
@@ -53,7 +58,7 @@ public class TimelineService {
                     .filter(board -> excludeId == null || !board.getUid().equals(excludeId))
                     .filter(board -> tagSet.isEmpty() || board.getTags().containsAll(tagSet))
                     .filter(board -> keyword == null || boardMatches(board, keyword))
-                    .map(board -> new TimelineItem(BoardDto.from(board), "board", board.getCreatedAt(), board.getUpdatedAt()))
+                    .map(board -> new TimelineItem(BoardDto.from(board, this::resolveAttachmentUrl), board.getUid(), board.getCreatedAt(), board.getUpdatedAt()))
                     .forEach(items::add);
         }
 
@@ -62,13 +67,19 @@ public class TimelineService {
                 : Comparator.comparing(TimelineItem::createdAt);
         items.sort(comparator.reversed());
 
-        int fromIndex = Math.min((normalizedPage - 1) * normalizedLimit, items.size());
-        int toIndex = Math.min(fromIndex + normalizedLimit, items.size());
+        int fromIndex = cursorStartIndex(items, decodedCursor, sort);
+        int toIndex = Math.min(fromIndex + normalizedLimit + 1, items.size());
+        List<TimelineItem> slice = items.subList(fromIndex, toIndex);
+        boolean hasNext = slice.size() > normalizedLimit;
+        List<TimelineItem> visibleItems = hasNext ? slice.subList(0, normalizedLimit) : slice;
+        String nextCursor = hasNext && !visibleItems.isEmpty()
+                ? encodeCursor(visibleItems.get(visibleItems.size() - 1), sort)
+                : null;
 
         return new TimelineResponse(
-                items.subList(fromIndex, toIndex).stream().map(TimelineItem::data).toList(),
-                items.size(),
-                normalizedPage,
+                visibleItems.stream().map(TimelineItem::data).toList(),
+                hasNext,
+                nextCursor,
                 normalizedLimit
         );
     }
@@ -125,6 +136,55 @@ public class TimelineService {
         }
     }
 
-    private record TimelineItem(Object data, String type, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private int cursorStartIndex(List<TimelineItem> items, TimelineCursor cursor, String sort) {
+        if (cursor == null) {
+            return 0;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            TimelineItem item = items.get(i);
+            if (item.uid().equals(cursor.uid())) {
+                return i + 1;
+            }
+        }
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).sortAt(sort).isBefore(cursor.sortAt())) {
+                return i;
+            }
+        }
+        return items.size();
+    }
+
+    private String encodeCursor(TimelineItem item, String sort) {
+        String payload = item.sortAt(sort).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "|" + item.uid();
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private TimelineCursor decodeCursor(String cursor) {
+        if (cursor == null || cursor.isBlank()) {
+            return null;
+        }
+        try {
+            String payload = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
+            String[] parts = payload.split("\\|", 2);
+            return new TimelineCursor(LocalDateTime.parse(parts[0], DateTimeFormatter.ISO_LOCAL_DATE_TIME), UUID.fromString(parts[1]));
+        } catch (RuntimeException e) {
+            throw new BusinessException(TimelineErrorCode.INVALID_TIMELINE_REQUEST);
+        }
+    }
+
+    private String resolveAttachmentUrl(NoteAttachment attachment) {
+        if (attachment.getS3Key() == null || attachment.getS3Key().isBlank()) {
+            return attachment.getUrl();
+        }
+        return uploadService.createReadUrl(attachment.getS3Key());
+    }
+
+    private record TimelineCursor(LocalDateTime sortAt, UUID uid) {
+    }
+
+    private record TimelineItem(Object data, UUID uid, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        private LocalDateTime sortAt(String sort) {
+            return "updatedAt".equals(sort) ? updatedAt : createdAt;
+        }
     }
 }

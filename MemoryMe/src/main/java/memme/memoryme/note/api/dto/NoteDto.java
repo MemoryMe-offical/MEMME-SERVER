@@ -8,6 +8,7 @@ import memme.memoryme.note.domain.NoteAttachment;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Schema(description = "노트 응답 DTO")
 public record NoteDto(
@@ -19,8 +20,12 @@ public record NoteDto(
         String content,
         @Schema(description = "첨부 이미지 URL 목록")
         List<String> imageUris,
+        @Schema(description = "첨부 이미지 S3 key 목록")
+        List<String> imageKeys,
         @Schema(description = "첨부 영상 URL 목록")
         List<String> videoUris,
+        @Schema(description = "첨부 영상 S3 key 목록")
+        List<String> videoKeys,
         @Schema(description = "첨부 파일 목록")
         List<FileAttachmentDto> files,
         @Schema(description = "링크 URL")
@@ -33,26 +38,42 @@ public record NoteDto(
         LocalDateTime updatedAt
 ) {
     public static NoteDto from(Note note) {
+        return from(note, null);
+    }
+
+    public static NoteDto from(Note note, Function<NoteAttachment, String> urlResolver) {
         return new NoteDto(
                 note.getUid(),
                 note.getTitle(),
                 note.getContent(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.IMAGE)
-                        .map(NoteAttachment::getUrl)
+                        .map(attachment -> resolveUrl(attachment, urlResolver))
+                        .toList(),
+                note.getAttachments().stream()
+                        .filter(attachment -> attachment.getType() == AttachmentType.IMAGE)
+                        .map(NoteAttachment::getS3Key)
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
-                        .map(NoteAttachment::getUrl)
+                        .map(attachment -> resolveUrl(attachment, urlResolver))
+                        .toList(),
+                note.getAttachments().stream()
+                        .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
+                        .map(NoteAttachment::getS3Key)
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.FILE)
-                        .map(FileAttachmentDto::from)
+                        .map(attachment -> FileAttachmentDto.from(attachment, urlResolver))
                         .toList(),
                 note.getUrl(),
                 OgDataDto.from(note),
                 note.getCreatedAt(),
                 note.getUpdatedAt()
         );
+    }
+
+    private static String resolveUrl(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {
+        return urlResolver == null ? attachment.getUrl() : urlResolver.apply(attachment);
     }
 }

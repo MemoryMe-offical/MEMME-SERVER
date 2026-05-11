@@ -44,7 +44,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         );
 
         return new AttachmentListResponse(
-                attachments.getContent().stream().map(AttachmentDto::from).toList(),
+                attachments.getContent().stream().map(attachment -> AttachmentDto.from(attachment, this::resolveAttachmentUrl)).toList(),
                 attachments.getTotalElements(),
                 normalizedPage,
                 normalizedLimit
@@ -54,7 +54,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Override
     @Transactional(readOnly = true)
     public AttachmentDto getAttachment(UUID attachmentUid) {
-        return AttachmentDto.from(getCurrentUserAttachment(attachmentUid));
+        return AttachmentDto.from(getCurrentUserAttachment(attachmentUid), this::resolveAttachmentUrl);
     }
 
     @Override
@@ -93,5 +93,12 @@ public class AttachmentServiceImpl implements AttachmentService {
         } catch (IllegalArgumentException e) {
             throw new BusinessException(AttachmentErrorCode.INVALID_ATTACHMENT_REQUEST);
         }
+    }
+
+    private String resolveAttachmentUrl(NoteAttachment attachment) {
+        if (attachment.getS3Key() == null || attachment.getS3Key().isBlank()) {
+            return attachment.getUrl();
+        }
+        return uploadService.createReadUrl(attachment.getS3Key());
     }
 }
