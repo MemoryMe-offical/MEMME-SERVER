@@ -96,9 +96,28 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     private String resolveAttachmentUrl(NoteAttachment attachment) {
-        if (attachment.getS3Key() == null || attachment.getS3Key().isBlank()) {
+        String key = resolveAttachmentKey(attachment);
+        if (key == null) {
             return attachment.getUrl();
         }
-        return uploadService.createReadUrl(attachment.getS3Key());
+        return uploadService.createReadUrl(key);
+    }
+
+    private String resolveAttachmentKey(NoteAttachment attachment) {
+        if (attachment.getS3Key() != null && !attachment.getS3Key().isBlank()) {
+            return attachment.getS3Key().trim();
+        }
+        String url = attachment.getUrl();
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        String normalized = url.trim();
+        if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("/")) {
+            return null;
+        }
+        return normalized.contains("/users/")
+                && (normalized.contains("/images/") || normalized.contains("/videos/") || normalized.contains("/files/"))
+                ? normalized
+                : null;
     }
 }

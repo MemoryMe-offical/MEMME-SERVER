@@ -266,14 +266,18 @@ public class BoardServiceImpl implements BoardService {
         }
         urls.stream()
                 .filter(url -> url != null && !url.isBlank())
-                .map(url -> NoteAttachment.builder()
+                .map(url -> {
+                    String value = url.trim();
+                    String key = extractKey(value);
+                    return NoteAttachment.builder()
                         .uid(UUID.randomUUID())
                         .userUid(userUid)
                         .type(type)
                         .originalName(originalName)
-                        .url(url.trim())
-                        .s3Key(extractKeyFromObjectUrl(url.trim()))
-                        .build())
+                        .url(key == null ? value : objectUrlBuilder.build(key))
+                        .s3Key(key)
+                        .build();
+                })
                 .forEach(attachments::add);
     }
 
@@ -301,7 +305,10 @@ public class BoardServiceImpl implements BoardService {
             url = objectUrlBuilder.build(key);
         }
         if (key == null && url != null) {
-            key = extractKeyFromObjectUrl(url);
+            key = extractKey(url);
+        }
+        if (key != null) {
+            url = objectUrlBuilder.build(key);
         }
         return NoteAttachment.builder()
                 .uid(file.uid() != null ? file.uid() : UUID.randomUUID())
@@ -334,14 +341,36 @@ public class BoardServiceImpl implements BoardService {
         return java.net.URLDecoder.decode(encodedKey, java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    private String extractKey(String value) {
+        String key = extractKeyFromObjectUrl(value);
+        if (key != null) {
+            return key;
+        }
+        String normalized = blankToNull(value);
+        return isS3ObjectKey(normalized) ? normalized : null;
+    }
+
+    private boolean isS3ObjectKey(String value) {
+        return value != null
+                && !value.startsWith("/")
+                && !value.startsWith("http://")
+                && !value.startsWith("https://")
+                && value.contains("/users/")
+                && (value.contains("/images/") || value.contains("/videos/") || value.contains("/files/"));
+    }
+
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
     private String resolveAttachmentUrl(NoteAttachment attachment) {
-        if (attachment.getS3Key() == null || attachment.getS3Key().isBlank()) {
+        String key = blankToNull(attachment.getS3Key());
+        if (key == null) {
+            key = extractKey(attachment.getUrl());
+        }
+        if (key == null) {
             return attachment.getUrl();
         }
-        return uploadService.createReadUrl(attachment.getS3Key());
+        return uploadService.createReadUrl(key);
     }
 }

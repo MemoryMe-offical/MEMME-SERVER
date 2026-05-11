@@ -35,7 +35,7 @@ public record FileAttachmentDto(
                 attachment.getUid(),
                 attachment.getOriginalName(),
                 urlResolver == null ? attachment.getUrl() : urlResolver.apply(attachment),
-                attachment.getS3Key(),
+                resolveKey(attachment),
                 attachment.getMimeType(),
                 attachment.getSizeBytes(),
                 attachment.getThumbnailUrl(),
@@ -60,5 +60,23 @@ public record FileAttachmentDto(
                 .thumbnailUrl(thumbnailUrl)
                 .durationSeconds(duration)
                 .build();
+    }
+
+    private static String resolveKey(NoteAttachment attachment) {
+        if (attachment.getS3Key() != null && !attachment.getS3Key().isBlank()) {
+            return attachment.getS3Key();
+        }
+        String url = attachment.getUrl();
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        String normalized = url.trim();
+        if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("/")) {
+            return null;
+        }
+        return normalized.contains("/users/")
+                && (normalized.contains("/images/") || normalized.contains("/videos/") || normalized.contains("/files/"))
+                ? normalized
+                : null;
     }
 }
