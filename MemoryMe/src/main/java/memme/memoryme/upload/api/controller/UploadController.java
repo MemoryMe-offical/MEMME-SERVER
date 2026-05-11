@@ -62,6 +62,12 @@ public class UploadController {
         return ResponseEntity.ok(ResponseWrapper.ok(200, "업로드 파일 목록 조회 성공", uploadService.getUploadedFiles()));
     }
 
+    @Operation(summary = "전체 업로드 객체 목록 조회")
+    @GetMapping("/objects")
+    public ResponseEntity<ResponseWrapper<UploadObjectListResponse>> getUploadedObjects() {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "전체 업로드 객체 목록 조회 성공", uploadService.getUploadedObjects()));
+    }
+
     @Operation(summary = "S3 객체 접근 URL 리다이렉트")
     @GetMapping("/object")
     public ResponseEntity<Void> redirectObject(@RequestParam("key") String key) {
