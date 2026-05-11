@@ -7,6 +7,7 @@ import memme.memoryme.global.util.response.ResponseWrapper;
 import memme.memoryme.upload.api.dto.FileUploadResponse;
 import memme.memoryme.upload.api.dto.ImageUploadResponse;
 import memme.memoryme.upload.api.dto.UploadObjectListResponse;
+import memme.memoryme.upload.api.dto.UploadObjectUrlResponse;
 import memme.memoryme.upload.api.dto.VideoUploadResponse;
 import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.http.HttpHeaders;
@@ -67,5 +68,12 @@ public class UploadController {
         return ResponseEntity.status(302)
                 .header(HttpHeaders.LOCATION, URI.create(uploadService.createReadUrl(key)).toString())
                 .build();
+    }
+
+    @Operation(summary = "S3 객체 접근 URL 조회")
+    @GetMapping("/object-url")
+    public ResponseEntity<ResponseWrapper<UploadObjectUrlResponse>> getObjectUrl(@RequestParam("key") String key) {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "업로드 객체 접근 URL 조회 성공",
+                new UploadObjectUrlResponse(uploadService.createReadUrl(key))));
     }
 }
