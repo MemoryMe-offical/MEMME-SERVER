@@ -15,6 +15,7 @@ public interface UploadService {
     UploadObjectListResponse getUploadedImages();
     UploadObjectListResponse getUploadedVideos();
     UploadObjectListResponse getUploadedFiles();
+    UploadObjectListResponse getUploadedObjects();
     String createReadUrl(String key);
     void deleteObject(String key);
 }

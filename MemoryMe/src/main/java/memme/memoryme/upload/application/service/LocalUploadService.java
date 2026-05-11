@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 @Profile("local-upload")
@@ -71,6 +72,15 @@ public class LocalUploadService implements UploadService {
     @Override
     public UploadObjectListResponse getUploadedFiles() {
         return listUploadedObjects("files");
+    }
+
+    @Override
+    public UploadObjectListResponse getUploadedObjects() {
+        return mergeUploadedObjects(
+                listUploadedObjects("images"),
+                listUploadedObjects("videos"),
+                listUploadedObjects("files")
+        );
     }
 
     private String store(MultipartFile file, String directory) {
@@ -133,7 +143,7 @@ public class LocalUploadService implements UploadService {
     private UploadObjectListResponse listUploadedObjects(String directory) {
         Path targetDir = UPLOAD_ROOT.resolve(directory).normalize();
         if (!Files.exists(targetDir)) {
-            return new UploadObjectListResponse(List.of(), 0);
+            return new UploadObjectListResponse(List.of(), 0, 0);
         }
         try (var paths = Files.list(targetDir)) {
             List<UploadObjectDto> objects = paths
@@ -141,13 +151,29 @@ public class LocalUploadService implements UploadService {
                     .sorted(Comparator.comparing(this::lastModified).reversed())
                     .map(path -> {
                         String url = "/uploads/" + directory + "/" + path.getFileName();
-                        return new UploadObjectDto(url, url, size(path), lastModified(path));
+                        return new UploadObjectDto(directory, url, url, size(path), lastModified(path));
                     })
                     .toList();
-            return new UploadObjectListResponse(objects, objects.size());
+            return new UploadObjectListResponse(objects, objects.size(), totalSize(objects));
         } catch (IOException e) {
             throw new BusinessException(UploadErrorCode.OBJECT_LIST_FAILED);
         }
+    }
+
+    private UploadObjectListResponse mergeUploadedObjects(UploadObjectListResponse... responses) {
+        List<UploadObjectDto> objects = Stream.of(responses)
+                .flatMap(response -> response.items().stream())
+                .sorted(Comparator.comparing(UploadObjectDto::lastModified, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .toList();
+        return new UploadObjectListResponse(objects, objects.size(), totalSize(objects));
+    }
+
+    private long totalSize(List<UploadObjectDto> objects) {
+        return objects.stream()
+                .map(UploadObjectDto::size)
+                .filter(size -> size != null && size > 0)
+                .mapToLong(Long::longValue)
+                .sum();
     }
 
     private Long size(Path path) {

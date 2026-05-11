@@ -9,6 +9,8 @@ public record UploadObjectListResponse(
         @Schema(description = "업로드 객체 목록")
         List<UploadObjectDto> items,
         @Schema(description = "전체 개수", example = "12")
-        long total
+        long total,
+        @Schema(description = "전체 용량(bytes)", example = "10485760")
+        long totalSize
 ) {
 }

@@ -25,9 +25,11 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 @Primary
@@ -93,6 +95,15 @@ public class S3UploadService implements UploadService {
     @Override
     public UploadObjectListResponse getUploadedFiles() {
         return listUploadedObjects("files");
+    }
+
+    @Override
+    public UploadObjectListResponse getUploadedObjects() {
+        return mergeUploadedObjects(
+                listUploadedObjects("images"),
+                listUploadedObjects("videos"),
+                listUploadedObjects("files")
+        );
     }
 
     @Override
@@ -202,16 +213,33 @@ public class S3UploadService implements UploadService {
                     .stream()
                     .filter(object -> !object.key().endsWith("/"))
                     .map(object -> new UploadObjectDto(
+                            directory,
                             objectUrlBuilder.build(object.key()),
                             object.key(),
                             object.size(),
                             object.lastModified()
                     ))
                     .toList();
-            return new UploadObjectListResponse(objects, objects.size());
+            return new UploadObjectListResponse(objects, objects.size(), totalSize(objects));
         } catch (S3Exception e) {
             throw new BusinessException(UploadErrorCode.OBJECT_LIST_FAILED);
         }
+    }
+
+    private UploadObjectListResponse mergeUploadedObjects(UploadObjectListResponse... responses) {
+        List<UploadObjectDto> objects = Stream.of(responses)
+                .flatMap(response -> response.items().stream())
+                .sorted(Comparator.comparing(UploadObjectDto::lastModified, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .toList();
+        return new UploadObjectListResponse(objects, objects.size(), totalSize(objects));
+    }
+
+    private long totalSize(List<UploadObjectDto> objects) {
+        return objects.stream()
+                .map(UploadObjectDto::size)
+                .filter(size -> size != null && size > 0)
+                .mapToLong(Long::longValue)
+                .sum();
     }
 
     private String sanitizeOriginalName(String originalName) {

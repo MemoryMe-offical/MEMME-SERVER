@@ -6,6 +6,8 @@ import java.time.Instant;
 
 @Schema(description = "업로드 객체 DTO")
 public record UploadObjectDto(
+        @Schema(description = "업로드 객체 카테고리", example = "images")
+        String category,
         @Schema(description = "객체 접근 URL", example = "/v1/upload/object?key=memme/users/.../image.png")
         String url,
         @Schema(description = "S3 객체 key")
