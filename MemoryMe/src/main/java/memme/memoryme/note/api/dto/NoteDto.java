@@ -22,10 +22,14 @@ public record NoteDto(
         List<String> imageUris,
         @Schema(description = "첨부 이미지 S3 key 목록")
         List<String> imageKeys,
+        @Schema(description = "첨부 이미지 목록")
+        List<MediaAttachmentDto> images,
         @Schema(description = "첨부 영상 URL 목록")
         List<String> videoUris,
         @Schema(description = "첨부 영상 S3 key 목록")
         List<String> videoKeys,
+        @Schema(description = "첨부 영상 목록")
+        List<MediaAttachmentDto> videos,
         @Schema(description = "첨부 파일 목록")
         List<FileAttachmentDto> files,
         @Schema(description = "링크 URL")
@@ -55,12 +59,20 @@ public record NoteDto(
                         .map(NoteAttachment::getS3Key)
                         .toList(),
                 note.getAttachments().stream()
+                        .filter(attachment -> attachment.getType() == AttachmentType.IMAGE)
+                        .map(attachment -> MediaAttachmentDto.from(attachment, urlResolver))
+                        .toList(),
+                note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
                         .map(attachment -> resolveUrl(attachment, urlResolver))
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
                         .map(NoteAttachment::getS3Key)
+                        .toList(),
+                note.getAttachments().stream()
+                        .filter(attachment -> attachment.getType() == AttachmentType.VIDEO)
+                        .map(attachment -> MediaAttachmentDto.from(attachment, urlResolver))
                         .toList(),
                 note.getAttachments().stream()
                         .filter(attachment -> attachment.getType() == AttachmentType.FILE)
