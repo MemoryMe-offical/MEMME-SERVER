@@ -2,19 +2,24 @@ package memme.memoryme.upload.application.service;
 
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.exception.BusinessException;
-import memme.memoryme.global.exception.CommonErrorCode;
 import memme.memoryme.global.util.jwt.CurrentUserProvider;
 import memme.memoryme.upload.api.dto.FileUploadResponse;
 import memme.memoryme.upload.api.dto.ImageUploadResponse;
+import memme.memoryme.upload.api.dto.UploadObjectDto;
+import memme.memoryme.upload.api.dto.UploadObjectListResponse;
 import memme.memoryme.upload.api.dto.VideoUploadResponse;
 import memme.memoryme.upload.config.S3StorageProperties;
+import memme.memoryme.upload.exception.UploadErrorCode;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -37,7 +42,7 @@ public class S3UploadService implements UploadService {
     @Override
     public ImageUploadResponse uploadImages(List<MultipartFile> files) {
         if (files == null || files.isEmpty() || files.size() > 10) {
-            throw new BusinessException(CommonErrorCode.BAD_REQUEST);
+            throw new BusinessException(UploadErrorCode.INVALID_UPLOAD_REQUEST);
         }
 
         List<StoredS3File> storedFiles = files.stream()
@@ -76,6 +81,21 @@ public class S3UploadService implements UploadService {
     }
 
     @Override
+    public UploadObjectListResponse getUploadedImages() {
+        return listUploadedObjects("images");
+    }
+
+    @Override
+    public UploadObjectListResponse getUploadedVideos() {
+        return listUploadedObjects("videos");
+    }
+
+    @Override
+    public UploadObjectListResponse getUploadedFiles() {
+        return listUploadedObjects("files");
+    }
+
+    @Override
     public String createReadUrl(String key) {
         validateReadableKey(key);
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -87,6 +107,19 @@ public class S3UploadService implements UploadService {
                 .getObjectRequest(getObjectRequest)
                 .build();
         return s3Presigner.presignGetObject(presignRequest).url().toString();
+    }
+
+    @Override
+    public void deleteObject(String key) {
+        validateReadableKey(key);
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(properties.getS3().getBucket())
+                    .key(key.trim())
+                    .build());
+        } catch (S3Exception e) {
+            throw new BusinessException(UploadErrorCode.OBJECT_DELETE_FAILED);
+        }
     }
 
     private StoredS3File upload(MultipartFile file, String directory, String requiredContentTypePrefix) {
@@ -120,20 +153,20 @@ public class S3UploadService implements UploadService {
                     file.getSize()
             );
         } catch (IOException e) {
-            throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR);
+            throw new BusinessException(UploadErrorCode.UPLOAD_FAILED);
         }
     }
 
     private void validateFile(MultipartFile file, String requiredContentTypePrefix) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException(CommonErrorCode.BAD_REQUEST);
+            throw new BusinessException(UploadErrorCode.INVALID_UPLOAD_REQUEST);
         }
         if (requiredContentTypePrefix == null) {
             return;
         }
         String contentType = file.getContentType();
         if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith(requiredContentTypePrefix)) {
-            throw new BusinessException(CommonErrorCode.BAD_REQUEST);
+            throw new BusinessException(UploadErrorCode.UNSUPPORTED_FILE_TYPE);
         }
     }
 
@@ -147,13 +180,37 @@ public class S3UploadService implements UploadService {
 
     private void validateReadableKey(String key) {
         if (key == null || key.isBlank()) {
-            throw new BusinessException(CommonErrorCode.BAD_REQUEST);
+            throw new BusinessException(UploadErrorCode.INVALID_OBJECT_KEY);
         }
         UUID userUid = currentUserProvider.getUid();
         String normalizedKey = key.trim();
         String expectedPrefix = properties.normalizedBasePrefix() + "/users/" + userUid + "/";
         if (!normalizedKey.startsWith(expectedPrefix) || normalizedKey.contains("..")) {
-            throw new BusinessException(CommonErrorCode.FORBIDDEN);
+            throw new BusinessException(UploadErrorCode.OBJECT_ACCESS_DENIED);
+        }
+    }
+
+    private UploadObjectListResponse listUploadedObjects(String directory) {
+        UUID userUid = currentUserProvider.getUid();
+        String prefix = properties.normalizedBasePrefix() + "/users/" + userUid + "/" + directory + "/";
+        try {
+            List<UploadObjectDto> objects = s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder()
+                            .bucket(properties.getS3().getBucket())
+                            .prefix(prefix)
+                            .build())
+                    .contents()
+                    .stream()
+                    .filter(object -> !object.key().endsWith("/"))
+                    .map(object -> new UploadObjectDto(
+                            objectUrlBuilder.build(object.key()),
+                            object.key(),
+                            object.size(),
+                            object.lastModified()
+                    ))
+                    .toList();
+            return new UploadObjectListResponse(objects, objects.size());
+        } catch (S3Exception e) {
+            throw new BusinessException(UploadErrorCode.OBJECT_LIST_FAILED);
         }
     }
 

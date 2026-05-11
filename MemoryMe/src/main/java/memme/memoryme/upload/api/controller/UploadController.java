@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.util.response.ResponseWrapper;
 import memme.memoryme.upload.api.dto.FileUploadResponse;
 import memme.memoryme.upload.api.dto.ImageUploadResponse;
+import memme.memoryme.upload.api.dto.UploadObjectListResponse;
 import memme.memoryme.upload.api.dto.VideoUploadResponse;
 import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.http.HttpHeaders;
@@ -40,6 +41,24 @@ public class UploadController {
     @PostMapping(value = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseWrapper<FileUploadResponse>> uploadFile(@RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseWrapper.ok(200, "파일 업로드 성공", uploadService.uploadFile(file)));
+    }
+
+    @Operation(summary = "업로드 이미지 객체 목록 조회")
+    @GetMapping("/images")
+    public ResponseEntity<ResponseWrapper<UploadObjectListResponse>> getUploadedImages() {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "업로드 이미지 목록 조회 성공", uploadService.getUploadedImages()));
+    }
+
+    @Operation(summary = "업로드 영상 객체 목록 조회")
+    @GetMapping("/videos")
+    public ResponseEntity<ResponseWrapper<UploadObjectListResponse>> getUploadedVideos() {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "업로드 영상 목록 조회 성공", uploadService.getUploadedVideos()));
+    }
+
+    @Operation(summary = "업로드 파일 객체 목록 조회")
+    @GetMapping("/files")
+    public ResponseEntity<ResponseWrapper<UploadObjectListResponse>> getUploadedFiles() {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "업로드 파일 목록 조회 성공", uploadService.getUploadedFiles()));
     }
 
     @Operation(summary = "S3 객체 접근 URL 리다이렉트")

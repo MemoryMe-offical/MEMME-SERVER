@@ -10,6 +10,8 @@ import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.memo.infra.repository.MemoRepository;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.timeline.api.dto.TimelineResponse;
+import memme.memoryme.global.exception.BusinessException;
+import memme.memoryme.timeline.exception.TimelineErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,8 @@ public class TimelineService {
         String normalizedType = normalize(type);
         String keyword = normalize(q);
         Set<String> tagSet = parseTags(tags);
+        validateType(normalizedType);
+        validateSort(sort);
 
         List<TimelineItem> items = new ArrayList<>();
 
@@ -107,6 +111,18 @@ public class TimelineService {
             return null;
         }
         return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void validateType(String type) {
+        if (type != null && !type.equals("memo") && !type.equals("board")) {
+            throw new BusinessException(TimelineErrorCode.INVALID_TIMELINE_REQUEST);
+        }
+    }
+
+    private void validateSort(String sort) {
+        if (sort != null && !sort.equals("createdAt") && !sort.equals("updatedAt")) {
+            throw new BusinessException(TimelineErrorCode.INVALID_TIMELINE_REQUEST);
+        }
     }
 
     private record TimelineItem(Object data, String type, LocalDateTime createdAt, LocalDateTime updatedAt) {

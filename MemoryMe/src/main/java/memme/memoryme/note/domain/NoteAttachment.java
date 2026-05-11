@@ -77,6 +77,21 @@ public class NoteAttachment {
         this.note = note;
     }
 
+    public void updateFrom(NoteAttachment source) {
+        this.userUid = source.userUid;
+        this.type = source.type;
+        this.originalName = source.originalName;
+        this.storedName = source.storedName;
+        this.url = source.url;
+        this.bucket = source.bucket;
+        this.s3Key = source.s3Key;
+        this.mimeType = source.mimeType;
+        this.sizeBytes = source.sizeBytes;
+        this.thumbnailUrl = source.thumbnailUrl;
+        this.durationSeconds = source.durationSeconds;
+        this.status = source.status == null ? AttachmentStatus.ATTACHED : source.status;
+    }
+
     public void markDeleted() {
         this.status = AttachmentStatus.DELETED;
     }

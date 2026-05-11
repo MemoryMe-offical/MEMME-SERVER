@@ -1,6 +1,8 @@
 package memme.memoryme.og.application.service;
 
+import memme.memoryme.global.exception.BusinessException;
 import memme.memoryme.note.api.dto.OgDataDto;
+import memme.memoryme.og.exception.OgErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -22,7 +24,7 @@ public class OgService {
 
     public OgDataDto fetch(String url) {
         if (!isHttpUrl(url)) {
-            return null;
+            throw new BusinessException(OgErrorCode.INVALID_OG_REQUEST);
         }
 
         try {
