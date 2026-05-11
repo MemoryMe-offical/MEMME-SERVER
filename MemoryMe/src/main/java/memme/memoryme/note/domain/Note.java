@@ -6,8 +6,12 @@ import memme.memoryme.board.domain.Board;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "note", indexes = {
@@ -86,16 +90,45 @@ public class Note {
     }
 
     public void replaceAttachments(List<NoteAttachment> newAttachments) {
-        this.attachments.clear();
+        Map<UUID, NoteAttachment> existingByUid = this.attachments.stream()
+                .filter(attachment -> attachment.getUid() != null)
+                .collect(Collectors.toMap(
+                        NoteAttachment::getUid,
+                        Function.identity(),
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
+
+        List<NoteAttachment> replacements = new ArrayList<>();
         if (newAttachments != null) {
-            newAttachments.forEach(this::addAttachment);
+            for (NoteAttachment newAttachment : newAttachments) {
+                NoteAttachment attachment = existingByUid.get(newAttachment.getUid());
+                if (attachment != null) {
+                    attachment.updateFrom(newAttachment);
+                } else {
+                    attachment = newAttachment;
+                }
+                attachment.assignNote(this);
+                replacements.add(attachment);
+            }
         }
+
+        this.attachments.removeIf(existing -> replacements.stream().noneMatch(replacement -> replacement == existing));
+        replacements.stream()
+                .filter(replacement -> !this.attachments.contains(replacement))
+                .forEach(this.attachments::add);
         touch();
     }
 
     public void addAttachment(NoteAttachment attachment) {
         attachment.assignNote(this);
         this.attachments.add(attachment);
+    }
+
+    public void removeAttachment(NoteAttachment attachment) {
+        this.attachments.remove(attachment);
+        attachment.assignNote(null);
+        touch();
     }
 
     public void touch() {
