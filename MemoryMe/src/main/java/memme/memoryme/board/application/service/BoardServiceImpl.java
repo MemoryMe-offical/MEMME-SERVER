@@ -104,11 +104,13 @@ public class BoardServiceImpl implements BoardService {
         validateNoteTitle(request.title());
 
         OgDataDto ogData = resolveOgData(request.ogDatas(), request.ogData());
+        List<String> urls = resolveUrls(request.urls(), request.url());
         Note note = Note.builder()
                 .uid(UUID.randomUUID())
                 .title(request.title().trim())
                 .content(blankToNull(request.content()))
-                .url(blankToNull(resolveFirstUrl(request.urls(), request.url())))
+                .urls(urls)
+                .url(firstUrl(urls))
                 .ogTitle(ogData != null ? blankToNull(ogData.title()) : null)
                 .ogDescription(ogData != null ? blankToNull(ogData.description()) : null)
                 .ogImageUrl(ogData != null ? blankToNull(ogData.imageUrl()) : null)
@@ -135,7 +137,7 @@ public class BoardServiceImpl implements BoardService {
         note.update(
                 request.title().trim(),
                 blankToNull(request.content()),
-                blankToNull(resolveFirstUrl(request.urls(), request.url())),
+                resolveUrls(request.urls(), request.url()),
                 ogData != null ? blankToNull(ogData.title()) : null,
                 ogData != null ? blankToNull(ogData.description()) : null,
                 ogData != null ? blankToNull(ogData.imageUrl()) : null,
@@ -365,15 +367,24 @@ public class BoardServiceImpl implements BoardService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    private String resolveFirstUrl(List<String> urls, String url) {
+    private List<String> resolveUrls(List<String> urls, String url) {
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
         if (urls != null) {
             for (String u : urls) {
                 if (u != null && !u.isBlank()) {
-                    return u;
+                    normalized.add(u.trim());
                 }
             }
         }
-        return url;
+        String legacyUrl = blankToNull(url);
+        if (normalized.isEmpty() && legacyUrl != null) {
+            normalized.add(legacyUrl);
+        }
+        return new ArrayList<>(normalized);
+    }
+
+    private String firstUrl(List<String> urls) {
+        return urls == null || urls.isEmpty() ? null : urls.get(0);
     }
 
     private OgDataDto resolveOgData(List<OgDataDto> ogDatas, OgDataDto ogData) {

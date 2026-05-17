@@ -44,6 +44,13 @@ public class Note {
     @Column(length = 2048)
     private String url;
 
+    @ElementCollection
+    @CollectionTable(name = "note_url", joinColumns = @JoinColumn(name = "note_id"))
+    @Column(name = "url", nullable = false, length = 2048)
+    @OrderColumn(name = "sort_order")
+    @Builder.Default
+    private List<String> urls = new ArrayList<>();
+
     @Column(name = "og_title")
     private String ogTitle;
 
@@ -78,15 +85,23 @@ public class Note {
         this.sortOrder = sortOrder;
     }
 
-    public void update(String title, String content, String url, String ogTitle, String ogDescription, String ogImageUrl, String ogSiteName) {
+    public void update(String title, String content, List<String> urls, String ogTitle, String ogDescription, String ogImageUrl, String ogSiteName) {
         this.title = title;
         this.content = content;
-        this.url = url;
+        replaceUrls(urls);
         this.ogTitle = ogTitle;
         this.ogDescription = ogDescription;
         this.ogImageUrl = ogImageUrl;
         this.ogSiteName = ogSiteName;
         touch();
+    }
+
+    public void replaceUrls(List<String> urls) {
+        this.urls.clear();
+        if (urls != null) {
+            this.urls.addAll(urls);
+        }
+        this.url = this.urls.isEmpty() ? null : this.urls.get(0);
     }
 
     public void replaceAttachments(List<NoteAttachment> newAttachments) {

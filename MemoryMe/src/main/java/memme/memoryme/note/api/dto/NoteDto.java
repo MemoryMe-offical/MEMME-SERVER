@@ -51,6 +51,9 @@ public record NoteDto(
 
     public static NoteDto from(Note note, Function<NoteAttachment, String> urlResolver) {
         String url = note.getUrl();
+        List<String> urls = note.getUrls().isEmpty()
+                ? (url != null ? List.of(url) : List.of())
+                : List.copyOf(note.getUrls());
         OgDataDto ogData = OgDataDto.from(note);
         return new NoteDto(
                 note.getUid(),
@@ -84,7 +87,7 @@ public record NoteDto(
                         .filter(attachment -> attachment.getType() == AttachmentType.FILE)
                         .map(attachment -> FileAttachmentDto.from(attachment, urlResolver))
                         .toList(),
-                url != null ? List.of(url) : List.of(),
+                urls,
                 url,
                 ogData != null ? List.of(ogData) : List.of(),
                 ogData,
