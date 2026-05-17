@@ -42,4 +42,7 @@ public class UserEntity {
     @Builder.Default
     private Boolean emailVerified = false;
 
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
 }
