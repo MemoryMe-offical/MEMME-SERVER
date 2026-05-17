@@ -32,9 +32,13 @@ public record NoteDto(
         List<MediaAttachmentDto> videos,
         @Schema(description = "첨부 파일 목록")
         List<FileAttachmentDto> files,
-        @Schema(description = "링크 URL")
+        @Schema(description = "링크 URL 목록")
+        List<String> urls,
+        @Schema(description = "링크 URL (레거시)")
         String url,
-        @Schema(description = "OG 미리보기 데이터")
+        @Schema(description = "OG 미리보기 데이터 목록")
+        List<OgDataDto> ogDatas,
+        @Schema(description = "OG 미리보기 데이터 (레거시)")
         OgDataDto ogData,
         @Schema(description = "생성 시각")
         LocalDateTime createdAt,
@@ -46,6 +50,8 @@ public record NoteDto(
     }
 
     public static NoteDto from(Note note, Function<NoteAttachment, String> urlResolver) {
+        String url = note.getUrl();
+        OgDataDto ogData = OgDataDto.from(note);
         return new NoteDto(
                 note.getUid(),
                 note.getTitle(),
@@ -78,8 +84,10 @@ public record NoteDto(
                         .filter(attachment -> attachment.getType() == AttachmentType.FILE)
                         .map(attachment -> FileAttachmentDto.from(attachment, urlResolver))
                         .toList(),
-                note.getUrl(),
-                OgDataDto.from(note),
+                url != null ? List.of(url) : List.of(),
+                url,
+                ogData != null ? List.of(ogData) : List.of(),
+                ogData,
                 note.getCreatedAt(),
                 note.getUpdatedAt()
         );
