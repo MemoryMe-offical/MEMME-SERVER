@@ -20,9 +20,13 @@ public record CreateNoteRequest(
         List<String> videoKeys,
         @Schema(description = "첨부 파일 목록")
         List<FileAttachmentDto> files,
-        @Schema(description = "링크 URL")
+        @Schema(description = "링크 URL 목록")
+        List<String> urls,
+        @Schema(description = "링크 URL (레거시)")
         String url,
-        @Schema(description = "OG 미리보기 데이터")
+        @Schema(description = "OG 미리보기 데이터 목록")
+        List<OgDataDto> ogDatas,
+        @Schema(description = "OG 미리보기 데이터 (레거시)")
         OgDataDto ogData
 ) {
 }

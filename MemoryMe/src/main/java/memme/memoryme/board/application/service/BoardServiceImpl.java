@@ -103,15 +103,16 @@ public class BoardServiceImpl implements BoardService {
         Board board = getCurrentUserBoard(boardUid);
         validateNoteTitle(request.title());
 
+        OgDataDto ogData = resolveOgData(request.ogDatas(), request.ogData());
         Note note = Note.builder()
                 .uid(UUID.randomUUID())
                 .title(request.title().trim())
                 .content(blankToNull(request.content()))
-                .url(blankToNull(request.url()))
-                .ogTitle(request.ogData() != null ? blankToNull(request.ogData().title()) : null)
-                .ogDescription(request.ogData() != null ? blankToNull(request.ogData().description()) : null)
-                .ogImageUrl(request.ogData() != null ? blankToNull(request.ogData().imageUrl()) : null)
-                .ogSiteName(request.ogData() != null ? blankToNull(request.ogData().siteName()) : null)
+                .url(blankToNull(resolveFirstUrl(request.urls(), request.url())))
+                .ogTitle(ogData != null ? blankToNull(ogData.title()) : null)
+                .ogDescription(ogData != null ? blankToNull(ogData.description()) : null)
+                .ogImageUrl(ogData != null ? blankToNull(ogData.imageUrl()) : null)
+                .ogSiteName(ogData != null ? blankToNull(ogData.siteName()) : null)
                 .build();
 
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
@@ -130,14 +131,15 @@ public class BoardServiceImpl implements BoardService {
         Note note = findNote(board, noteUid);
         validateNoteTitle(request.title());
 
+        OgDataDto ogData = resolveOgData(request.ogDatas(), request.ogData());
         note.update(
                 request.title().trim(),
                 blankToNull(request.content()),
-                blankToNull(request.url()),
-                request.ogData() != null ? blankToNull(request.ogData().title()) : null,
-                request.ogData() != null ? blankToNull(request.ogData().description()) : null,
-                request.ogData() != null ? blankToNull(request.ogData().imageUrl()) : null,
-                request.ogData() != null ? blankToNull(request.ogData().siteName()) : null
+                blankToNull(resolveFirstUrl(request.urls(), request.url())),
+                ogData != null ? blankToNull(ogData.title()) : null,
+                ogData != null ? blankToNull(ogData.description()) : null,
+                ogData != null ? blankToNull(ogData.imageUrl()) : null,
+                ogData != null ? blankToNull(ogData.siteName()) : null
         );
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.touch();
@@ -361,6 +363,24 @@ public class BoardServiceImpl implements BoardService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String resolveFirstUrl(List<String> urls, String url) {
+        if (urls != null) {
+            for (String u : urls) {
+                if (u != null && !u.isBlank()) {
+                    return u;
+                }
+            }
+        }
+        return url;
+    }
+
+    private OgDataDto resolveOgData(List<OgDataDto> ogDatas, OgDataDto ogData) {
+        if (ogDatas != null && !ogDatas.isEmpty()) {
+            return ogDatas.get(0);
+        }
+        return ogData;
     }
 
     private String resolveAttachmentUrl(NoteAttachment attachment) {
