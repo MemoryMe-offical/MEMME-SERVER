@@ -1,13 +1,10 @@
 package memme.memoryme.auth.api.dto.email;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Getter
-@Setter
-@AllArgsConstructor
-public class EmailResponseDTO {
-    private String message;
-    private String email;
+@Schema(description = "이메일 인증 응답 DTO")
+public record EmailResponseDTO(
+        @Schema(description = "이메일", example = "test@example.com")
+        String email
+) {
 }
