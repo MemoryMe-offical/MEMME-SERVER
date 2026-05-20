@@ -161,9 +161,23 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    public MoveNoteResponse moveNotes(UUID sourceBoardUid, MoveNoteRequest request) {
+        return moveNotes(sourceBoardUid, null, request);
+    }
+
+    @Override
+    @Transactional
     public MoveNoteResponse moveNote(UUID sourceBoardUid, UUID noteUid, MoveNoteRequest request) {
+        return moveNotes(sourceBoardUid, noteUid, request);
+    }
+
+    private MoveNoteResponse moveNotes(UUID sourceBoardUid, UUID pathNoteUid, MoveNoteRequest request) {
         UUID targetBoardUid = request == null ? null : request.resolvedTargetBoardUid();
+        List<UUID> noteUids = request == null ? List.of() : request.resolvedNoteUids(pathNoteUid);
         if (targetBoardUid == null) {
+            throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
+        }
+        if (noteUids.isEmpty()) {
             throw new BusinessException(BoardErrorCode.INVALID_NOTE_REQUEST);
         }
         if (sourceBoardUid.equals(targetBoardUid)) {
@@ -172,13 +186,22 @@ public class BoardServiceImpl implements BoardService {
 
         Board sourceBoard = getCurrentUserBoard(sourceBoardUid);
         Board targetBoard = getCurrentUserBoard(targetBoardUid);
-        Note note = findNote(sourceBoard, noteUid);
+        List<Note> notes = noteUids.stream()
+                .map(noteUid -> findNote(sourceBoard, noteUid))
+                .toList();
 
-        sourceBoard.removeNote(note);
-        targetBoard.addNote(note);
+        notes.forEach(note -> {
+            sourceBoard.removeNote(note);
+            targetBoard.addNote(note);
+        });
         boardRepository.flush();
 
-        return new MoveNoteResponse(BoardDto.from(sourceBoard, this::resolveAttachmentUrl), BoardDto.from(targetBoard, this::resolveAttachmentUrl));
+        return new MoveNoteResponse(
+                noteUids,
+                noteUids.size(),
+                BoardDto.from(sourceBoard, this::resolveAttachmentUrl),
+                BoardDto.from(targetBoard, this::resolveAttachmentUrl)
+        );
     }
 
     private Board getCurrentUserBoard(UUID boardUid) {
