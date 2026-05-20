@@ -12,23 +12,23 @@ import java.util.function.Function;
 
 @Schema(description = "보드 응답 DTO")
 public record BoardDto(
-        @Schema(description = "보드 UID")
+        @Schema(description = "보드 UID", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID uid,
         @Schema(description = "타임라인 타입", example = "board")
         String type,
-        @Schema(description = "보드 제목")
+        @Schema(description = "보드 제목", example = "여름 MT")
         String title,
-        @Schema(description = "보드 설명")
+        @Schema(description = "보드 설명", example = "MT 준비 자료와 공지 모음")
         String description,
-        @Schema(description = "태그 목록")
+        @Schema(description = "태그 목록", example = "[\"mt\", \"공지\"]")
         List<String> tags,
         @Schema(description = "노트 목록")
         List<NoteDto> notes,
-        @Schema(description = "북마크 여부")
+        @Schema(description = "북마크 여부", example = "true")
         boolean bookmarked,
-        @Schema(description = "생성 시각")
+        @Schema(description = "생성 시각", example = "2026-05-20T14:30:00")
         LocalDateTime createdAt,
-        @Schema(description = "수정 시각")
+        @Schema(description = "수정 시각", example = "2026-05-20T15:10:00")
         LocalDateTime updatedAt
 ) {
     public static BoardDto from(Board board) {

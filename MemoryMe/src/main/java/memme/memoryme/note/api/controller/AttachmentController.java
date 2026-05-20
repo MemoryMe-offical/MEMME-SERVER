@@ -1,6 +1,8 @@
 package memme.memoryme.note.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -14,6 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @Tag(name = "Attachment API", description = "노트에 연결된 첨부파일 조회·삭제 API")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "204", description = "삭제 성공"),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 첨부파일 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "첨부파일을 찾을 수 없음")
+})
 @RestController
 @RequestMapping("/v1/attachments")
 @RequiredArgsConstructor
