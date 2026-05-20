@@ -12,37 +12,37 @@ import java.util.function.Function;
 
 @Schema(description = "노트 응답 DTO")
 public record NoteDto(
-        @Schema(description = "노트 UID")
+        @Schema(description = "노트 UID", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID uid,
-        @Schema(description = "노트 제목")
+        @Schema(description = "노트 제목", example = "여름 MT")
         String title,
-        @Schema(description = "노트 본문")
+        @Schema(description = "노트 본문", example = "MT 추가요금 공지...")
         String content,
-        @Schema(description = "첨부 이미지 URL 목록")
+        @Schema(description = "첨부 이미지 URL 목록", example = "[\"https://s3-presigned-url...\"]")
         List<String> imageUris,
-        @Schema(description = "첨부 이미지 S3 key 목록")
+        @Schema(description = "첨부 이미지 S3 key 목록", example = "[\"prod/memme/users/user-uid/images/image.webp\"]")
         List<String> imageKeys,
         @Schema(description = "첨부 이미지 목록")
         List<MediaAttachmentDto> images,
-        @Schema(description = "첨부 영상 URL 목록")
+        @Schema(description = "첨부 영상 URL 목록", example = "[\"https://s3-presigned-url...\"]")
         List<String> videoUris,
-        @Schema(description = "첨부 영상 S3 key 목록")
+        @Schema(description = "첨부 영상 S3 key 목록", example = "[\"prod/memme/users/user-uid/videos/video.mp4\"]")
         List<String> videoKeys,
         @Schema(description = "첨부 영상 목록")
         List<MediaAttachmentDto> videos,
         @Schema(description = "첨부 파일 목록")
         List<FileAttachmentDto> files,
-        @Schema(description = "링크 URL 목록")
+        @Schema(description = "링크 URL 목록", example = "[\"https://naver.com\", \"https://youtube.com/watch?v=A0PHoS8mIjU\"]")
         List<String> urls,
-        @Schema(description = "링크 URL (레거시)")
+        @Schema(description = "링크 URL (레거시)", example = "https://naver.com")
         String url,
         @Schema(description = "OG 미리보기 데이터 목록")
         List<OgDataDto> ogDatas,
         @Schema(description = "OG 미리보기 데이터 (레거시)")
         OgDataDto ogData,
-        @Schema(description = "생성 시각")
+        @Schema(description = "생성 시각", example = "2026-05-20T14:30:00")
         LocalDateTime createdAt,
-        @Schema(description = "수정 시각")
+        @Schema(description = "수정 시각", example = "2026-05-20T15:10:00")
         LocalDateTime updatedAt
 ) {
     public static NoteDto from(Note note) {

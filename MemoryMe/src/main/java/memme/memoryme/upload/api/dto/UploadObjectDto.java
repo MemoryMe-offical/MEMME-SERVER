@@ -8,13 +8,13 @@ import java.time.Instant;
 public record UploadObjectDto(
         @Schema(description = "업로드 객체 카테고리", example = "images")
         String category,
-        @Schema(description = "객체 접근 URL", example = "/v1/upload/object?key=memme/users/.../image.png")
+        @Schema(description = "객체 접근 URL", example = "https://s3-presigned-url...")
         String url,
-        @Schema(description = "S3 객체 key")
+        @Schema(description = "S3 객체 key", example = "prod/memme/users/user-uid/images/image.webp")
         String key,
-        @Schema(description = "파일 크기(bytes)")
+        @Schema(description = "파일 크기(bytes)", example = "204800")
         Long size,
-        @Schema(description = "마지막 수정 시각")
+        @Schema(description = "마지막 수정 시각", example = "2026-05-20T05:30:00Z")
         Instant lastModified
 ) {
 }

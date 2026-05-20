@@ -9,11 +9,11 @@ import java.util.UUID;
 
 @Schema(description = "노트 이동 요청 DTO")
 public record MoveNoteRequest(
-        @Schema(description = "이동할 노트 UID 목록")
+        @Schema(description = "이동할 노트 UID 목록", example = "[\"550e8400-e29b-41d4-a716-446655440000\", \"660e8400-e29b-41d4-a716-446655440000\"]")
         List<UUID> noteUids,
-        @Schema(description = "이동할 노트 UID (단건 호환)")
+        @Schema(description = "이동할 노트 UID (단건 호환)", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID noteUid,
-        @Schema(description = "이동할 노트 UID (기존 프론트 호환)")
+        @Schema(description = "이동할 노트 UID (기존 프론트 호환)", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID noteId,
         @Schema(description = "대상 보드 UID", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID targetBoardUid,

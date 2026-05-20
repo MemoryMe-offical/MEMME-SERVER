@@ -1,6 +1,8 @@
 package memme.memoryme.upload.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -20,6 +22,14 @@ import java.net.URI;
 import java.util.List;
 
 @Tag(name = "Upload API", description = "이미지·영상·파일 업로드 API")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "302", description = "S3 presigned URL로 리다이렉트"),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 업로드 요청 또는 객체 키"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "403", description = "업로드 객체 접근 권한 없음"),
+        @ApiResponse(responseCode = "500", description = "업로드/목록 조회/삭제 실패")
+})
 @RestController
 @RequestMapping("/v1/upload")
 @RequiredArgsConstructor

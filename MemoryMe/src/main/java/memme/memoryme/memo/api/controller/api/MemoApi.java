@@ -2,6 +2,8 @@ package memme.memoryme.memo.api.controller.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import memme.memoryme.board.api.dto.BoardDto;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -12,6 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @Tag(name = "Memo API", description = "빠른 메모 API")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "201", description = "생성 성공"),
+        @ApiResponse(responseCode = "204", description = "삭제 성공"),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 메모 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "메모 또는 보드를 찾을 수 없음")
+})
 @RequestMapping({"/v1/memos", "/v1/memo"})
 public interface MemoApi {
     @Operation(summary = "메모 생성")
