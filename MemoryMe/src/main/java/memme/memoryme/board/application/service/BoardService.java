@@ -17,5 +17,6 @@ public interface BoardService {
     NoteDto createNote(UUID boardUid, CreateNoteRequest request);
     NoteDto updateNote(UUID boardUid, UUID noteUid, UpdateNoteRequest request);
     void deleteNote(UUID boardUid, UUID noteUid);
+    MoveNoteResponse moveNotes(UUID sourceBoardUid, MoveNoteRequest request);
     MoveNoteResponse moveNote(UUID sourceBoardUid, UUID noteUid, MoveNoteRequest request);
 }

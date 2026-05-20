@@ -66,6 +66,13 @@ public interface BoardApi {
     );
 
     @Operation(summary = "노트 다른 보드로 이동")
+    @PatchMapping("/{boardUid}/notes/move")
+    ResponseEntity<ResponseWrapper<MoveNoteResponse>> moveNotes(
+            @PathVariable UUID boardUid,
+            @RequestBody MoveNoteRequest request
+    );
+
+    @Operation(summary = "노트 다른 보드로 이동 (단건 호환)")
     @PatchMapping("/{boardUid}/notes/{noteUid}/move")
     ResponseEntity<ResponseWrapper<MoveNoteResponse>> moveNote(
             @PathVariable UUID boardUid,

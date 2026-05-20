@@ -67,6 +67,11 @@ public class BoardController implements BoardApi {
     }
 
     @Override
+    public ResponseEntity<ResponseWrapper<MoveNoteResponse>> moveNotes(UUID boardUid, MoveNoteRequest request) {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "노트 이동 성공", boardService.moveNotes(boardUid, request)));
+    }
+
+    @Override
     public ResponseEntity<ResponseWrapper<MoveNoteResponse>> moveNote(UUID boardUid, UUID noteUid, MoveNoteRequest request) {
         return ResponseEntity.ok(ResponseWrapper.ok(200, "노트 이동 성공", boardService.moveNote(boardUid, noteUid, request)));
     }
