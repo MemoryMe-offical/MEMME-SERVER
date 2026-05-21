@@ -89,6 +89,7 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 3600000
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
 
 cloud:
   aws:
@@ -99,6 +100,11 @@ cloud:
     credentials:
       access-key: ${AWS_ACCESS_KEY_ID}
       secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+management:
+  health:
+    mail:
+      enabled: false
 
 # spring:
 #   web:

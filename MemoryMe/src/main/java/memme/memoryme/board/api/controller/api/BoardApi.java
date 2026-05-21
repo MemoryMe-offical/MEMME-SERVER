@@ -2,6 +2,8 @@ package memme.memoryme.board.api.controller.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import memme.memoryme.board.api.dto.*;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -15,6 +17,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @Tag(name = "Board API", description = "보드 및 보드 하위 노트 API")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "요청 성공"),
+        @ApiResponse(responseCode = "201", description = "생성 성공"),
+        @ApiResponse(responseCode = "204", description = "삭제 성공"),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 보드/노트 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "보드 또는 노트를 찾을 수 없음")
+})
 @RequestMapping("/v1/boards")
 public interface BoardApi {
     @Operation(summary = "보드 생성")
@@ -66,6 +76,13 @@ public interface BoardApi {
     );
 
     @Operation(summary = "노트 다른 보드로 이동")
+    @PatchMapping("/{boardUid}/notes/move")
+    ResponseEntity<ResponseWrapper<MoveNoteResponse>> moveNotes(
+            @PathVariable UUID boardUid,
+            @RequestBody MoveNoteRequest request
+    );
+
+    @Operation(summary = "노트 다른 보드로 이동 (단건 호환)")
     @PatchMapping("/{boardUid}/notes/{noteUid}/move")
     ResponseEntity<ResponseWrapper<MoveNoteResponse>> moveNote(
             @PathVariable UUID boardUid,

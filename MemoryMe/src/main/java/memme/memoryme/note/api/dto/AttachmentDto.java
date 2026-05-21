@@ -12,29 +12,29 @@ import java.util.function.Function;
 
 @Schema(description = "첨부파일 응답 DTO")
 public record AttachmentDto(
-        @Schema(description = "첨부파일 UID")
+        @Schema(description = "첨부파일 UID", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID uid,
         @Schema(description = "첨부파일 타입", example = "IMAGE")
         AttachmentType type,
-        @Schema(description = "원본 파일명")
+        @Schema(description = "원본 파일명", example = "report.pdf")
         String name,
-        @Schema(description = "객체 접근 URL")
+        @Schema(description = "객체 접근 URL", example = "https://s3-presigned-url...")
         String url,
-        @Schema(description = "S3 객체 key")
+        @Schema(description = "S3 객체 key", example = "prod/memme/users/user-uid/files/file.pdf")
         String key,
-        @Schema(description = "MIME 타입")
+        @Schema(description = "MIME 타입", example = "application/pdf")
         String mimeType,
-        @Schema(description = "파일 크기(bytes)")
+        @Schema(description = "파일 크기(bytes)", example = "204800")
         Long size,
-        @Schema(description = "영상 썸네일 URL")
+        @Schema(description = "영상 썸네일 URL", example = "https://example.com/thumb.jpg")
         String thumbnailUrl,
-        @Schema(description = "영상 길이(초)")
+        @Schema(description = "영상 길이(초)", example = "42")
         Integer duration,
-        @Schema(description = "연결된 노트 UID")
+        @Schema(description = "연결된 노트 UID", example = "660e8400-e29b-41d4-a716-446655440000")
         UUID noteUid,
-        @Schema(description = "연결된 보드 UID")
+        @Schema(description = "연결된 보드 UID", example = "770e8400-e29b-41d4-a716-446655440000")
         UUID boardUid,
-        @Schema(description = "생성 시각")
+        @Schema(description = "생성 시각", example = "2026-05-20T14:30:00")
         LocalDateTime createdAt
 ) {
     public static AttachmentDto from(NoteAttachment attachment) {

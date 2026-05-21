@@ -8,19 +8,19 @@ import java.util.function.Function;
 
 @Schema(description = "이미지·영상 첨부 DTO")
 public record MediaAttachmentDto(
-        @Schema(description = "첨부 UID")
+        @Schema(description = "첨부 UID", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID uid,
-        @Schema(description = "접근 URL")
+        @Schema(description = "접근 URL", example = "https://s3-presigned-url...")
         String url,
-        @Schema(description = "S3 객체 key")
+        @Schema(description = "S3 객체 key", example = "prod/memme/users/user-uid/images/image.webp")
         String key,
-        @Schema(description = "MIME 타입")
+        @Schema(description = "MIME 타입", example = "image/webp")
         String mimeType,
-        @Schema(description = "파일 크기(bytes)")
+        @Schema(description = "파일 크기(bytes)", example = "204800")
         Long size,
-        @Schema(description = "영상 썸네일 URL")
+        @Schema(description = "영상 썸네일 URL", example = "https://example.com/thumb.jpg")
         String thumbnailUrl,
-        @Schema(description = "영상 길이(초)")
+        @Schema(description = "영상 길이(초)", example = "42")
         Integer duration
 ) {
     public static MediaAttachmentDto from(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {

@@ -1,6 +1,8 @@
 package memme.memoryme.tag.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -13,6 +15,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Tag API", description = "보드 태그 조회 API")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "태그 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 태그 조회 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패")
+})
 @RestController
 @RequestMapping("/v1/tags")
 @RequiredArgsConstructor

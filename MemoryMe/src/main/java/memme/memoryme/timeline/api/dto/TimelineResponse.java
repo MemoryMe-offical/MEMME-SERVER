@@ -10,7 +10,7 @@ public record TimelineResponse(
         List<Object> items,
         @Schema(description = "다음 slice 존재 여부", example = "true")
         boolean hasNext,
-        @Schema(description = "다음 slice 조회용 cursor")
+        @Schema(description = "다음 slice 조회용 cursor", example = "MjAyNi0wNS0yMFQxNDozMDowMHw1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDA")
         String nextCursor,
         @Schema(description = "요청 slice 크기", example = "50")
         int limit

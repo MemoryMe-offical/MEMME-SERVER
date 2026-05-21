@@ -1,6 +1,8 @@
 package memme.memoryme.timeline.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -15,6 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @Tag(name = "Timeline API", description = "메모와 보드를 혼합 조회하는 타임라인 API")
+@ApiResponses({
+        @ApiResponse(responseCode = "200", description = "타임라인 조회 성공"),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 타임라인 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패")
+})
 @RestController
 @RequestMapping("/v1/timeline")
 @RequiredArgsConstructor
