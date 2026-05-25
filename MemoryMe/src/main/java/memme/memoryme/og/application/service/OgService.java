@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,27 @@ public class OgService {
     }
 
     public OgDataDto fetch(String url) {
+        OgFetchResult result = fetchResult(url);
+        return result == null ? null : result.ogData();
+    }
+
+    public OgDataDto fetchWithSummary(String url) {
+        OgFetchResult result = fetchResult(url);
+        if (result == null || result.ogData() == null) {
+            throw new BusinessException(OgErrorCode.AI_SUMMARY_UNAVAILABLE);
+        }
+        OgDataDto ogData = result.ogData();
+        String summary = openAiSummaryService.summarize(url, ogData, result.sourceText());
+        return new OgDataDto(
+                ogData.title(),
+                ogData.description(),
+                ogData.imageUrl(),
+                ogData.siteName(),
+                summary
+        );
+    }
+
+    private OgFetchResult fetchResult(String url) {
         if (!isHttpUrl(url)) {
             throw new BusinessException(OgErrorCode.INVALID_OG_REQUEST);
         }
@@ -65,29 +87,15 @@ public class OgService {
             String siteName = meta(html, "property", "og:site_name");
             title = normalizeTitle(title, siteName);
             description = normalizeDescription(description, siteName);
+            String sourceText = extractSourceText(html, title, description, siteName);
 
-            return new OgDataDto(title, description, imageUrl, siteName, null);
+            return new OgFetchResult(new OgDataDto(title, description, imageUrl, siteName, null), sourceText);
         } catch (IllegalArgumentException | IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
             return null;
         }
-    }
-
-    public OgDataDto fetchWithSummary(String url) {
-        OgDataDto ogData = fetch(url);
-        if (ogData == null) {
-            throw new BusinessException(OgErrorCode.AI_SUMMARY_UNAVAILABLE);
-        }
-        String summary = openAiSummaryService.summarize(url, ogData);
-        return new OgDataDto(
-                ogData.title(),
-                ogData.description(),
-                ogData.imageUrl(),
-                ogData.siteName(),
-                summary
-        );
     }
 
     private boolean isHttpUrl(String url) {
@@ -172,6 +180,87 @@ public class OgService {
         return abbreviate(cleaned, MAX_DESCRIPTION_LENGTH);
     }
 
+    private String extractSourceText(String html, String title, String description, String siteName) {
+        String author = firstNonBlank(
+                meta(html, "name", "author"),
+                meta(html, "property", "article:author")
+        );
+        String publishedAt = firstNonBlank(
+                meta(html, "property", "article:published_time"),
+                meta(html, "name", "date")
+        );
+        String bodyText = firstNonBlank(
+                extractTagText(html, "article"),
+                extractTagText(html, "main"),
+                extractBodyText(html)
+        );
+
+        StringBuilder builder = new StringBuilder();
+        appendLine(builder, "site", siteName);
+        appendLine(builder, "author", author);
+        appendLine(builder, "publishedAt", publishedAt);
+        appendLine(builder, "title", title);
+        appendLine(builder, "description", description);
+        if (bodyText != null && !isSimilar(bodyText, description)) {
+            appendLine(builder, "pageText", abbreviate(bodyText, 5000));
+        }
+        return builder.toString().trim();
+    }
+
+    private String extractTagText(String html, String tagName) {
+        Pattern pattern = Pattern.compile("<" + tagName + "\\b[^>]*>(.*?)</" + tagName + ">", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(html);
+        String longest = null;
+        while (matcher.find()) {
+            String text = stripHtml(matcher.group(1));
+            if (text != null && (longest == null || text.length() > longest.length())) {
+                longest = text;
+            }
+        }
+        return longest;
+    }
+
+    private String extractBodyText(String html) {
+        Matcher matcher = Pattern.compile("<body\\b[^>]*>(.*?)</body>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(html);
+        return matcher.find() ? stripHtml(matcher.group(1)) : null;
+    }
+
+    private String stripHtml(String html) {
+        if (html == null || html.isBlank()) {
+            return null;
+        }
+        String stripped = html
+                .replaceAll("(?is)<script\\b[^>]*>.*?</script>", " ")
+                .replaceAll("(?is)<style\\b[^>]*>.*?</style>", " ")
+                .replaceAll("(?is)<noscript\\b[^>]*>.*?</noscript>", " ")
+                .replaceAll("(?is)<svg\\b[^>]*>.*?</svg>", " ")
+                .replaceAll("(?is)<header\\b[^>]*>.*?</header>", " ")
+                .replaceAll("(?is)<footer\\b[^>]*>.*?</footer>", " ")
+                .replaceAll("(?is)<nav\\b[^>]*>.*?</nav>", " ")
+                .replaceAll("<[^>]+>", " ");
+        return cleanText(stripped);
+    }
+
+    private void appendLine(StringBuilder builder, String label, String value) {
+        String cleaned = cleanText(value);
+        if (cleaned != null) {
+            builder.append(label).append(": ").append(cleaned).append('\n');
+        }
+    }
+
+    private boolean isSimilar(String left, String right) {
+        if (left == null || right == null) {
+            return false;
+        }
+        List<String> leftTokens = List.of(left.toLowerCase().split("\\s+"));
+        List<String> rightTokens = List.of(right.toLowerCase().split("\\s+"));
+        if (leftTokens.isEmpty() || rightTokens.isEmpty()) {
+            return false;
+        }
+        long overlap = rightTokens.stream().filter(leftTokens::contains).count();
+        return overlap >= Math.min(20, rightTokens.size() * 0.8);
+    }
+
     private String extractInstagramCaption(String description) {
         Matcher matcher = Pattern.compile(".*?:\\s*\"(.*)\"\\.?$", Pattern.DOTALL).matcher(description);
         if (matcher.matches()) {
@@ -185,5 +274,8 @@ public class OgService {
             return value;
         }
         return value.substring(0, Math.max(0, maxLength - 1)).trim() + "...";
+    }
+
+    private record OgFetchResult(OgDataDto ogData, String sourceText) {
     }
 }

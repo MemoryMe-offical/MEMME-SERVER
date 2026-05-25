@@ -22,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OpenAiSummaryService {
     private static final URI CHAT_COMPLETIONS_URI = URI.create("https://api.openai.com/v1/chat/completions");
-    private static final int MAX_INPUT_LENGTH = 6000;
+    private static final int MAX_INPUT_LENGTH = 8000;
 
     private final OpenAiSummaryProperties properties;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -30,7 +30,7 @@ public class OpenAiSummaryService {
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
-    public String summarize(String url, OgDataDto ogData) {
+    public String summarize(String url, OgDataDto ogData, String sourceText) {
         if (properties.getApiKey() == null || properties.getApiKey().isBlank()) {
             throw new BusinessException(OgErrorCode.AI_SUMMARY_UNAVAILABLE);
         }
@@ -39,7 +39,7 @@ public class OpenAiSummaryService {
         }
 
         try {
-            String body = objectMapper.writeValueAsString(requestBody(url, ogData));
+            String body = objectMapper.writeValueAsString(requestBody(url, ogData, sourceText));
             HttpRequest request = HttpRequest.newBuilder(CHAT_COMPLETIONS_URI)
                     .timeout(Duration.ofSeconds(Math.max(1, properties.getTimeoutSeconds())))
                     .header("Authorization", "Bearer " + properties.getApiKey().trim())
@@ -60,39 +60,43 @@ public class OpenAiSummaryService {
         }
     }
 
-    private Map<String, Object> requestBody(String url, OgDataDto ogData) {
+    private Map<String, Object> requestBody(String url, OgDataDto ogData, String sourceText) {
         return Map.of(
                 "model", properties.getModel(),
                 "messages", List.of(
                         Map.of(
                                 "role", "system",
-                                "content", "너는 링크 미리보기 데이터를 바탕으로 한국어 요약을 만든다. 입력에 없는 사실은 만들지 말고, 앱 화면에 바로 보여줄 요약 문장만 반환해라."
+                                "content", "너는 링크와 페이지 본문 후보를 근거로 한국어 요약을 만든다. 입력에 없는 사실은 만들지 말고, 불확실한 내용은 단정하지 마라. 앱 화면에 바로 표시할 자연스러운 요약문만 반환해라."
                         ),
                         Map.of(
                                 "role", "user",
-                                "content", input(url, ogData)
+                                "content", input(url, ogData, sourceText)
                         )
                 ),
-                "temperature", 0.2,
+                "temperature", 0.1,
                 "max_tokens", Math.max(100, properties.getMaxTokens())
         );
     }
 
-    private String input(String url, OgDataDto ogData) {
+    private String input(String url, OgDataDto ogData, String sourceText) {
         String value = """
-                다음 링크 메타데이터를 한국어 1~2문장으로 자연스럽게 요약해줘.
-                제목, 키워드, 불릿, 접두사 없이 요약문만 반환해줘.
-                소셜 게시물이라면 좋아요/댓글 수보다 실제 게시물 내용 중심으로 요약해줘.
+                아래 자료를 바탕으로 한국어 2~3문장으로 정밀하게 요약해줘.
+                핵심 주제, 대상, 맥락, 중요한 세부사항을 포함하되 자료에 없는 사실은 만들지 마.
+                제목, 키워드, 불릿, 접두사, "요약:" 같은 말 없이 요약문만 반환해줘.
+                소셜 게시물이라면 좋아요/댓글 수보다 실제 게시물 내용과 의도를 중심으로 요약해줘.
 
                 url: %s
                 title: %s
                 description: %s
                 siteName: %s
+                sourceText:
+                %s
                 """.formatted(
                 nullToEmpty(url),
                 nullToEmpty(ogData.title()),
                 nullToEmpty(ogData.description()),
-                nullToEmpty(ogData.siteName())
+                nullToEmpty(ogData.siteName()),
+                nullToEmpty(sourceText)
         );
         return value.length() > MAX_INPUT_LENGTH ? value.substring(0, MAX_INPUT_LENGTH) : value;
     }
