@@ -115,6 +115,7 @@ public class BoardServiceImpl implements BoardService {
                 .ogDescription(ogData != null ? blankToNull(ogData.description()) : null)
                 .ogImageUrl(ogData != null ? blankToNull(ogData.imageUrl()) : null)
                 .ogSiteName(ogData != null ? blankToNull(ogData.siteName()) : null)
+                .ogSummary(ogData != null ? blankToNull(ogData.summary()) : null)
                 .build();
 
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
@@ -141,7 +142,8 @@ public class BoardServiceImpl implements BoardService {
                 ogData != null ? blankToNull(ogData.title()) : null,
                 ogData != null ? blankToNull(ogData.description()) : null,
                 ogData != null ? blankToNull(ogData.imageUrl()) : null,
-                ogData != null ? blankToNull(ogData.siteName()) : null
+                ogData != null ? blankToNull(ogData.siteName()) : null,
+                ogData != null ? blankToNull(ogData.summary()) : null
         );
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.touch();
