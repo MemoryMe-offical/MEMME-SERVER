@@ -13,8 +13,11 @@ import memme.memoryme.memo.application.service.MemoService;
 import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.memo.exception.MemoErrorCode;
 import memme.memoryme.memo.infra.repository.MemoRepository;
+import memme.memoryme.note.api.dto.FileAttachmentDto;
+import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
+import memme.memoryme.upload.application.service.S3ObjectUrlBuilder;
 import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,7 @@ public class MemoServiceImpl implements MemoService {
     private final BoardRepository boardRepository;
     private final CurrentUserProvider currentUserProvider;
     private final UserReader userReader;
+    private final S3ObjectUrlBuilder objectUrlBuilder;
     private final UploadService uploadService;
 
     @Override
@@ -39,17 +43,22 @@ public class MemoServiceImpl implements MemoService {
     public MemoDto createMemo(NewMemoDto request) {
         UUID userUid = currentUserProvider.getUid();
         validateUserExists(userUid);
-        String text = request == null ? null : request.resolvedText();
-        validateText(text);
+        if (request == null) {
+            throw new BusinessException(MemoErrorCode.INVALID_MEMO_REQUEST);
+        }
+        String text = blankToNull(request.resolvedText());
+        List<NoteAttachment> attachments = toAttachments(userUid, request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files());
+        validateMemo(text, attachments);
 
         Memo memo = Memo.builder()
                 .uid(UUID.randomUUID())
                 .userUid(userUid)
-                .text(text.trim())
+                .text(text)
                 .bookmarked(false)
                 .build();
 
-        return MemoDto.from(memoRepository.saveAndFlush(memo));
+        memo.replaceAttachments(attachments);
+        return MemoDto.from(memoRepository.saveAndFlush(memo), this::resolveAttachmentUrl);
     }
 
     @Override
@@ -69,7 +78,7 @@ public class MemoServiceImpl implements MemoService {
                 .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
 
         memo.changeBookmarked(request != null && request.valueOrFalse());
-        return MemoDto.from(memo);
+        return MemoDto.from(memo, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -125,16 +134,142 @@ public class MemoServiceImpl implements MemoService {
     private Note createNoteFromMemo(Memo memo, String noteTitle, String content) {
         String title = blankToNull(noteTitle);
         if (title == null) {
-            title = memo.getText();
+            title = blankToNull(memo.getText());
+        }
+        if (title == null) {
+            title = memo.getAttachments().stream()
+                    .map(NoteAttachment::getOriginalName)
+                    .filter(name -> name != null && !name.isBlank())
+                    .findFirst()
+                    .orElse("첨부 메모");
         }
         if (title.length() > 100) {
             title = title.substring(0, 100);
         }
-        return Note.builder()
+        Note note = Note.builder()
                 .uid(UUID.randomUUID())
                 .title(title)
                 .content(blankToNull(content))
                 .build();
+        note.replaceAttachments(copyAttachments(memo.getAttachments()));
+        return note;
+    }
+
+    private List<NoteAttachment> toAttachments(
+            UUID userUid,
+            List<String> imageUris,
+            List<String> imageKeys,
+            List<String> videoUris,
+            List<String> videoKeys,
+            List<FileAttachmentDto> files
+    ) {
+        java.util.ArrayList<NoteAttachment> attachments = new java.util.ArrayList<>();
+
+        addUrlAttachments(attachments, userUid, AttachmentType.IMAGE, imageUris, null);
+        addKeyAttachments(attachments, userUid, AttachmentType.IMAGE, imageKeys);
+        addUrlAttachments(attachments, userUid, AttachmentType.VIDEO, videoUris, null);
+        addKeyAttachments(attachments, userUid, AttachmentType.VIDEO, videoKeys);
+
+        if (files != null) {
+            files.stream()
+                    .filter(file -> file != null && ((file.url() != null && !file.url().isBlank()) || (file.key() != null && !file.key().isBlank())))
+                    .map(file -> normalizeFileAttachment(file, userUid))
+                    .forEach(attachments::add);
+        }
+
+        long imageCount = attachments.stream().filter(attachment -> attachment.getType() == AttachmentType.IMAGE).count();
+        if (imageCount > 10) {
+            throw new BusinessException(MemoErrorCode.INVALID_MEMO_REQUEST);
+        }
+
+        return attachments;
+    }
+
+    private void addUrlAttachments(List<NoteAttachment> attachments, UUID userUid, AttachmentType type, List<String> urls, String originalName) {
+        if (urls == null) {
+            return;
+        }
+        urls.stream()
+                .filter(url -> url != null && !url.isBlank())
+                .map(url -> {
+                    String value = url.trim();
+                    String key = extractKey(value);
+                    return NoteAttachment.builder()
+                            .uid(UUID.randomUUID())
+                            .userUid(userUid)
+                            .type(type)
+                            .originalName(originalName)
+                            .url(key == null ? value : objectUrlBuilder.build(key))
+                            .s3Key(key)
+                            .build();
+                })
+                .forEach(attachments::add);
+    }
+
+    private void addKeyAttachments(List<NoteAttachment> attachments, UUID userUid, AttachmentType type, List<String> keys) {
+        if (keys == null) {
+            return;
+        }
+        keys.stream()
+                .filter(key -> key != null && !key.isBlank())
+                .map(String::trim)
+                .map(key -> NoteAttachment.builder()
+                        .uid(UUID.randomUUID())
+                        .userUid(userUid)
+                        .type(type)
+                        .url(objectUrlBuilder.build(key))
+                        .s3Key(key)
+                        .build())
+                .forEach(attachments::add);
+    }
+
+    private NoteAttachment normalizeFileAttachment(FileAttachmentDto file, UUID userUid) {
+        String key = blankToNull(file.key());
+        String url = blankToNull(file.url());
+        if (url == null && key != null) {
+            url = objectUrlBuilder.build(key);
+        }
+        if (key == null && url != null) {
+            key = extractKey(url);
+        }
+        if (key != null) {
+            url = objectUrlBuilder.build(key);
+        }
+        return NoteAttachment.builder()
+                .uid(file.uid() != null ? file.uid() : UUID.randomUUID())
+                .userUid(userUid)
+                .type(AttachmentType.FILE)
+                .originalName(blankToNull(file.name()))
+                .url(url)
+                .s3Key(key)
+                .mimeType(blankToNull(file.mimeType()))
+                .sizeBytes(file.size())
+                .thumbnailUrl(blankToNull(file.thumbnailUrl()))
+                .durationSeconds(file.duration())
+                .build();
+    }
+
+    private List<NoteAttachment> copyAttachments(List<NoteAttachment> attachments) {
+        if (attachments == null || attachments.isEmpty()) {
+            return List.of();
+        }
+        return attachments.stream()
+                .map(attachment -> NoteAttachment.builder()
+                        .uid(UUID.randomUUID())
+                        .userUid(attachment.getUserUid())
+                        .type(attachment.getType())
+                        .originalName(attachment.getOriginalName())
+                        .storedName(attachment.getStoredName())
+                        .url(attachment.getUrl())
+                        .bucket(attachment.getBucket())
+                        .s3Key(attachment.getS3Key())
+                        .mimeType(attachment.getMimeType())
+                        .sizeBytes(attachment.getSizeBytes())
+                        .thumbnailUrl(attachment.getThumbnailUrl())
+                        .durationSeconds(attachment.getDurationSeconds())
+                        .status(attachment.getStatus())
+                        .build())
+                .toList();
     }
 
     private void validateUserExists(UUID userUid) {
@@ -143,8 +278,11 @@ public class MemoServiceImpl implements MemoService {
         }
     }
 
-    private void validateText(String text) {
-        if (text == null || text.isBlank() || text.length() > 2000) {
+    private void validateMemo(String text, List<NoteAttachment> attachments) {
+        if ((text == null || text.isBlank()) && (attachments == null || attachments.isEmpty())) {
+            throw new BusinessException(MemoErrorCode.INVALID_MEMO_REQUEST);
+        }
+        if (text != null && text.length() > 2000) {
             throw new BusinessException(MemoErrorCode.INVALID_MEMO_REQUEST);
         }
     }
@@ -178,6 +316,41 @@ public class MemoServiceImpl implements MemoService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String extractKeyFromObjectUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        String marker = "key=";
+        int index = url.indexOf(marker);
+        if (index < 0) {
+            return null;
+        }
+        String encodedKey = url.substring(index + marker.length());
+        int ampIndex = encodedKey.indexOf('&');
+        if (ampIndex >= 0) {
+            encodedKey = encodedKey.substring(0, ampIndex);
+        }
+        return java.net.URLDecoder.decode(encodedKey, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private String extractKey(String value) {
+        String key = extractKeyFromObjectUrl(value);
+        if (key != null) {
+            return key;
+        }
+        String normalized = blankToNull(value);
+        return isS3ObjectKey(normalized) ? normalized : null;
+    }
+
+    private boolean isS3ObjectKey(String value) {
+        return value != null
+                && !value.startsWith("/")
+                && !value.startsWith("http://")
+                && !value.startsWith("https://")
+                && value.contains("/users/")
+                && (value.contains("/images/") || value.contains("/videos/") || value.contains("/files/"));
     }
 
     private String resolveAttachmentUrl(NoteAttachment attachment) {

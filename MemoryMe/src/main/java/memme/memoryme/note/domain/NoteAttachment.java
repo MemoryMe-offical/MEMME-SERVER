@@ -2,6 +2,7 @@ package memme.memoryme.note.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import memme.memoryme.memo.domain.Memo;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "note_attachment", indexes = {
         @Index(name = "idx_attachment_note_id", columnList = "note_id"),
+        @Index(name = "idx_attachment_memo_id", columnList = "memo_id"),
         @Index(name = "idx_attachment_user_uid", columnList = "user_uid")
 })
 @Getter
@@ -28,6 +30,10 @@ public class NoteAttachment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "note_id")
     private Note note;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "memo_id")
+    private Memo memo;
 
     @Column(name = "user_uid")
     private UUID userUid;
@@ -75,6 +81,16 @@ public class NoteAttachment {
 
     public void assignNote(Note note) {
         this.note = note;
+        if (note != null) {
+            this.memo = null;
+        }
+    }
+
+    public void assignMemo(Memo memo) {
+        this.memo = memo;
+        if (memo != null) {
+            this.note = null;
+        }
     }
 
     public void updateFrom(NoteAttachment source) {

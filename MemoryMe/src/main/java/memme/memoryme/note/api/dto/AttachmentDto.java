@@ -2,6 +2,7 @@ package memme.memoryme.note.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import memme.memoryme.board.domain.Board;
+import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
@@ -32,6 +33,8 @@ public record AttachmentDto(
         Integer duration,
         @Schema(description = "연결된 노트 UID", example = "660e8400-e29b-41d4-a716-446655440000")
         UUID noteUid,
+        @Schema(description = "연결된 메모 UID", example = "550e8400-e29b-41d4-a716-446655440000")
+        UUID memoUid,
         @Schema(description = "연결된 보드 UID", example = "770e8400-e29b-41d4-a716-446655440000")
         UUID boardUid,
         @Schema(description = "생성 시각", example = "2026-05-20T14:30:00")
@@ -43,6 +46,7 @@ public record AttachmentDto(
 
     public static AttachmentDto from(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {
         Note note = attachment.getNote();
+        Memo memo = attachment.getMemo();
         Board board = note == null ? null : note.getBoard();
         return new AttachmentDto(
                 attachment.getUid(),
@@ -55,6 +59,7 @@ public record AttachmentDto(
                 attachment.getThumbnailUrl(),
                 attachment.getDurationSeconds(),
                 note == null ? null : note.getUid(),
+                memo == null ? null : memo.getUid(),
                 board == null ? null : board.getUid(),
                 attachment.getCreatedAt()
         );

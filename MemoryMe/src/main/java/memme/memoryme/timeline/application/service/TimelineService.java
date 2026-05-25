@@ -48,7 +48,7 @@ public class TimelineService {
                 memoRepository.findAllByUserUid(userUid).stream()
                         .filter(memo -> excludeId == null || !memo.getUid().equals(excludeId))
                         .filter(memo -> keyword == null || contains(memo.getText(), keyword))
-                        .map(memo -> new TimelineItem(MemoDto.from(memo), memo.getUid(), memo.getCreatedAt(), memo.getCreatedAt()))
+                        .map(memo -> new TimelineItem(MemoDto.from(memo, this::resolveAttachmentUrl), memo.getUid(), memo.getCreatedAt(), memo.getUpdatedAt()))
                         .forEach(items::add);
             }
         }
