@@ -3,6 +3,7 @@ package memme.memoryme.note.application.service;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.global.exception.BusinessException;
 import memme.memoryme.global.util.jwt.CurrentUserProvider;
+import memme.memoryme.memo.domain.Memo;
 import memme.memoryme.note.api.dto.AttachmentDto;
 import memme.memoryme.note.api.dto.AttachmentListResponse;
 import memme.memoryme.note.domain.AttachmentStatus;
@@ -66,6 +67,10 @@ public class AttachmentServiceImpl implements AttachmentService {
         Note note = attachment.getNote();
         if (note != null) {
             note.removeAttachment(attachment);
+        } else if (attachment.getMemo() != null) {
+            Memo memo = attachment.getMemo();
+            memo.getAttachments().remove(attachment);
+            attachment.assignMemo(null);
         } else {
             noteAttachmentRepository.delete(attachment);
         }

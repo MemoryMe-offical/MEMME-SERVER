@@ -2,9 +2,16 @@ package memme.memoryme.memo.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import memme.memoryme.note.domain.NoteAttachment;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "memo", indexes = {
@@ -26,11 +33,16 @@ public class Memo {
     @Column(name = "user_uid", nullable = false, updatable = false)
     private UUID userUid;
 
-    @Column(name = "title", nullable = false, length = 2000)
+    @Column(name = "title", length = 2000)
     private String text;
 
     @Column(nullable = false)
     private boolean bookmarked;
+
+    @OneToMany(mappedBy = "memo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    @Builder.Default
+    private List<NoteAttachment> attachments = new ArrayList<>();
 
     @Column(name = "created", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -40,6 +52,37 @@ public class Memo {
 
     public void changeBookmarked(boolean bookmarked) {
         this.bookmarked = bookmarked;
+        touch();
+    }
+
+    public void replaceAttachments(List<NoteAttachment> newAttachments) {
+        Map<UUID, NoteAttachment> existingByUid = this.attachments.stream()
+                .filter(attachment -> attachment.getUid() != null)
+                .collect(Collectors.toMap(
+                        NoteAttachment::getUid,
+                        Function.identity(),
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
+
+        List<NoteAttachment> replacements = new ArrayList<>();
+        if (newAttachments != null) {
+            for (NoteAttachment newAttachment : newAttachments) {
+                NoteAttachment attachment = existingByUid.get(newAttachment.getUid());
+                if (attachment != null) {
+                    attachment.updateFrom(newAttachment);
+                } else {
+                    attachment = newAttachment;
+                }
+                attachment.assignMemo(this);
+                replacements.add(attachment);
+            }
+        }
+
+        this.attachments.removeIf(existing -> replacements.stream().noneMatch(replacement -> replacement == existing));
+        replacements.stream()
+                .filter(replacement -> !this.attachments.contains(replacement))
+                .forEach(this.attachments::add);
         touch();
     }
 
