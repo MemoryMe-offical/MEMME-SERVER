@@ -66,7 +66,7 @@ public class OpenAiSummaryService {
                 "messages", List.of(
                         Map.of(
                                 "role", "system",
-                                "content", "너는 링크 미리보기 데이터를 바탕으로 한국어 요약을 만드는 assistant다. 과장하지 말고 입력에 없는 사실은 만들지 마라."
+                                "content", "너는 링크 미리보기 데이터를 바탕으로 한국어 요약을 만든다. 입력에 없는 사실은 만들지 말고, 앱 화면에 바로 보여줄 요약 문장만 반환해라."
                         ),
                         Map.of(
                                 "role", "user",
@@ -80,8 +80,9 @@ public class OpenAiSummaryService {
 
     private String input(String url, OgDataDto ogData) {
         String value = """
-                다음 링크 메타데이터를 2~4문장으로 요약해줘.
-                마지막에 핵심 키워드 3개를 쉼표로 덧붙여줘.
+                다음 링크 메타데이터를 한국어 1~2문장으로 자연스럽게 요약해줘.
+                제목, 키워드, 불릿, 접두사 없이 요약문만 반환해줘.
+                소셜 게시물이라면 좋아요/댓글 수보다 실제 게시물 내용 중심으로 요약해줘.
 
                 url: %s
                 title: %s
