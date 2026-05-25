@@ -1,5 +1,7 @@
 package memme.memoryme.og.application.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import memme.memoryme.global.exception.BusinessException;
 import memme.memoryme.note.api.dto.OgDataDto;
 import memme.memoryme.og.exception.OgErrorCode;
@@ -7,12 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +27,7 @@ public class OgService {
     private static final int MAX_TITLE_LENGTH = 180;
     private static final int MAX_DESCRIPTION_LENGTH = 1000;
     private final OpenAiSummaryService openAiSummaryService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(3))
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -55,6 +61,11 @@ public class OgService {
     private OgFetchResult fetchResult(String url) {
         if (!isHttpUrl(url)) {
             throw new BusinessException(OgErrorCode.INVALID_OG_REQUEST);
+        }
+
+        OgFetchResult youtubeResult = fetchYoutubeOEmbed(url);
+        if (youtubeResult != null) {
+            return youtubeResult;
         }
 
         try {
@@ -96,6 +107,80 @@ public class OgService {
             }
             return null;
         }
+    }
+
+    private OgFetchResult fetchYoutubeOEmbed(String url) {
+        if (!isYoutubeUrl(url)) {
+            return null;
+        }
+        try {
+            String encodedUrl = URLEncoder.encode(url.trim(), StandardCharsets.UTF_8);
+            URI uri = URI.create("https://www.youtube.com/oembed?format=json&url=" + encodedUrl);
+            HttpRequest request = HttpRequest.newBuilder(uri)
+                    .timeout(Duration.ofSeconds(5))
+                    .header("User-Agent", "MemoryMeBot/1.0")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return null;
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            String title = cleanText(root.path("title").asText(null));
+            String author = cleanText(root.path("author_name").asText(null));
+            String thumbnailUrl = cleanText(root.path("thumbnail_url").asText(null));
+            if (title == null) {
+                return null;
+            }
+
+            String description = author == null ? null : "채널: " + author;
+            String sourceText = youtubeSourceText(url, title, author);
+            return new OgFetchResult(
+                    new OgDataDto(
+                            abbreviate(title, MAX_TITLE_LENGTH),
+                            description,
+                            thumbnailUrl,
+                            "YouTube",
+                            null
+                    ),
+                    sourceText
+            );
+        } catch (IllegalArgumentException | IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            return null;
+        }
+    }
+
+    private boolean isYoutubeUrl(String url) {
+        try {
+            URI uri = URI.create(url.trim());
+            String host = uri.getHost();
+            if (host == null) {
+                return false;
+            }
+            String normalized = host.toLowerCase(Locale.ROOT);
+            return normalized.equals("youtu.be")
+                    || normalized.endsWith(".youtube.com")
+                    || normalized.equals("youtube.com")
+                    || normalized.endsWith(".youtube-nocookie.com")
+                    || normalized.equals("youtube-nocookie.com");
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private String youtubeSourceText(String url, String title, String author) {
+        StringBuilder builder = new StringBuilder();
+        appendLine(builder, "site", "YouTube");
+        appendLine(builder, "type", "video");
+        appendLine(builder, "url", url);
+        appendLine(builder, "title", title);
+        appendLine(builder, "channel", author);
+        return builder.toString().trim();
     }
 
     private boolean isHttpUrl(String url) {
