@@ -13,20 +13,24 @@ public record OgDataDto(
         @Schema(description = "OG image URL", example = "https://example.com/og.jpg")
         String imageUrl,
         @Schema(description = "OG site name", example = "Example")
-        String siteName
+        String siteName,
+        @Schema(description = "AI 요약", example = "이 링크는 서비스 출시 배경과 핵심 기능을 짧게 소개합니다.")
+        String summary
 ) {
     public static OgDataDto from(Note note) {
         if (note.getOgTitle() == null
                 && note.getOgDescription() == null
                 && note.getOgImageUrl() == null
-                && note.getOgSiteName() == null) {
+                && note.getOgSiteName() == null
+                && note.getOgSummary() == null) {
             return null;
         }
         return new OgDataDto(
                 note.getOgTitle(),
                 note.getOgDescription(),
                 note.getOgImageUrl(),
-                note.getOgSiteName()
+                note.getOgSiteName(),
+                note.getOgSummary()
         );
     }
 
@@ -34,14 +38,16 @@ public record OgDataDto(
         if (pendingLink.getOgTitle() == null
                 && pendingLink.getOgDescription() == null
                 && pendingLink.getOgImageUrl() == null
-                && pendingLink.getOgSiteName() == null) {
+                && pendingLink.getOgSiteName() == null
+                && pendingLink.getOgSummary() == null) {
             return null;
         }
         return new OgDataDto(
                 pendingLink.getOgTitle(),
                 pendingLink.getOgDescription(),
                 pendingLink.getOgImageUrl(),
-                pendingLink.getOgSiteName()
+                pendingLink.getOgSiteName(),
+                pendingLink.getOgSummary()
         );
     }
 }

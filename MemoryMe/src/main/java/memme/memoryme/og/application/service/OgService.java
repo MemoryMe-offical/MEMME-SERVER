@@ -17,10 +17,15 @@ import java.util.regex.Pattern;
 @Service
 public class OgService {
     private static final Pattern TITLE_PATTERN = Pattern.compile("<title[^>]*>(.*?)</title>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private final OpenAiSummaryService openAiSummaryService;
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(3))
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
+
+    public OgService(OpenAiSummaryService openAiSummaryService) {
+        this.openAiSummaryService = openAiSummaryService;
+    }
 
     public OgDataDto fetch(String url) {
         if (!isHttpUrl(url)) {
@@ -56,13 +61,28 @@ public class OgService {
             );
             String siteName = meta(html, "property", "og:site_name");
 
-            return new OgDataDto(title, description, imageUrl, siteName);
+            return new OgDataDto(title, description, imageUrl, siteName, null);
         } catch (IllegalArgumentException | IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
             return null;
         }
+    }
+
+    public OgDataDto fetchWithSummary(String url) {
+        OgDataDto ogData = fetch(url);
+        if (ogData == null) {
+            throw new BusinessException(OgErrorCode.AI_SUMMARY_UNAVAILABLE);
+        }
+        String summary = openAiSummaryService.summarize(url, ogData);
+        return new OgDataDto(
+                ogData.title(),
+                ogData.description(),
+                ogData.imageUrl(),
+                ogData.siteName(),
+                summary
+        );
     }
 
     private boolean isHttpUrl(String url) {
