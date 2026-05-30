@@ -47,6 +47,8 @@ public class BoardServiceImpl implements BoardService {
                 .description(blankToNull(request.description()))
                 .tags(normalizeTags(request.tags()))
                 .bookmarked(false)
+                .createdAt(request.createdAt())
+                .updatedAt(request.createdAt())
                 .build();
 
         return BoardDto.from(boardRepository.saveAndFlush(board), this::resolveAttachmentUrl);

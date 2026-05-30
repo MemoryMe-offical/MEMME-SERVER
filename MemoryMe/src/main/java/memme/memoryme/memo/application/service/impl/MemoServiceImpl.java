@@ -69,7 +69,13 @@ public class MemoServiceImpl implements MemoService {
     @Override
     @Transactional
     public MemoDto createImageMemo(String content, MultipartFile file) {
-        ImageUploadResponse uploadResponse = uploadService.uploadImages(List.of(file));
+        return createImageMemo(content, List.of(file));
+    }
+
+    @Override
+    @Transactional
+    public MemoDto createImageMemo(String content, List<MultipartFile> files) {
+        ImageUploadResponse uploadResponse = uploadService.uploadImages(files);
         List<String> keys = uploadResponse.keys();
         try {
             return createMemo(new NewMemoDto(
