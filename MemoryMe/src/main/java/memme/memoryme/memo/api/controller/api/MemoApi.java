@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import memme.memoryme.board.api.dto.BoardDto;
 import memme.memoryme.global.util.response.ResponseWrapper;
 import memme.memoryme.memo.api.dto.memo.*;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -36,6 +38,27 @@ public interface MemoApi {
     ResponseEntity<ResponseWrapper<MemoDto>> createMemo(
             @Parameter(description = "새 메모")
             @RequestBody NewMemoDto request
+    );
+
+    @Operation(summary = "이미지 메모 생성", description = "이미지 파일 하나를 업로드하고 첨부 메모를 한 번에 생성합니다.")
+    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<ResponseWrapper<MemoDto>> createImageMemo(
+            @RequestPart(value = "content", required = false) String content,
+            @RequestPart("file") MultipartFile file
+    );
+
+    @Operation(summary = "영상 메모 생성", description = "영상 파일 하나를 업로드하고 첨부 메모를 한 번에 생성합니다.")
+    @PostMapping(value = "/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<ResponseWrapper<MemoDto>> createVideoMemo(
+            @RequestPart(value = "content", required = false) String content,
+            @RequestPart("file") MultipartFile file
+    );
+
+    @Operation(summary = "파일 메모 생성", description = "파일 하나를 업로드하고 첨부 메모를 한 번에 생성합니다.")
+    @PostMapping(value = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<ResponseWrapper<MemoDto>> createFileMemo(
+            @RequestPart(value = "content", required = false) String content,
+            @RequestPart("file") MultipartFile file
     );
 
     @Operation(summary = "메모 삭제")
