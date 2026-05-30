@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,9 +27,9 @@ public class MemoController implements MemoApi {
     }
 
     @Override
-    public ResponseEntity<ResponseWrapper<MemoDto>> createImageMemo(String content, MultipartFile file) {
+    public ResponseEntity<ResponseWrapper<MemoDto>> createImageMemo(String content, List<MultipartFile> files, MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ResponseWrapper.ok(201, "이미지 메모 생성 성공", memoService.createImageMemo(content, file))
+                ResponseWrapper.ok(201, "이미지 메모 생성 성공", memoService.createImageMemo(content, resolvedFiles(files, file)))
         );
     }
 
@@ -73,5 +74,12 @@ public class MemoController implements MemoApi {
         return ResponseEntity.ok(
                 ResponseWrapper.ok(200, "메모를 기존 보드에 추가 성공", memoService.convertToExistingBoard(memoUid, boardUid, request))
         );
+    }
+
+    private List<MultipartFile> resolvedFiles(List<MultipartFile> files, MultipartFile file) {
+        if (files != null && !files.isEmpty()) {
+            return files;
+        }
+        return file == null ? List.of() : List.of(file);
     }
 }

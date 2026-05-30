@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Memo API", description = "빠른 메모 API")
@@ -40,11 +41,12 @@ public interface MemoApi {
             @RequestBody NewMemoDto request
     );
 
-    @Operation(summary = "이미지 메모 생성", description = "이미지 파일 하나를 업로드하고 첨부 메모를 한 번에 생성합니다.")
+    @Operation(summary = "이미지 메모 생성", description = "이미지 파일을 업로드하고 첨부 메모를 한 번에 생성합니다. 같은 요청의 여러 이미지는 하나의 메모에 함께 묶입니다.")
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<ResponseWrapper<MemoDto>> createImageMemo(
             @RequestPart(value = "content", required = false) String content,
-            @RequestPart("file") MultipartFile file
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestPart(value = "file", required = false) MultipartFile file
     );
 
     @Operation(summary = "영상 메모 생성", description = "영상 파일 하나를 업로드하고 첨부 메모를 한 번에 생성합니다.")
