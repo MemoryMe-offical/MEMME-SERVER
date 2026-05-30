@@ -17,11 +17,16 @@ import memme.memoryme.note.api.dto.FileAttachmentDto;
 import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
+import memme.memoryme.upload.api.dto.FileUploadResponse;
+import memme.memoryme.upload.api.dto.ImageUploadResponse;
+import memme.memoryme.upload.api.dto.VideoUploadResponse;
 import memme.memoryme.upload.application.service.S3ObjectUrlBuilder;
 import memme.memoryme.upload.application.service.UploadService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -59,6 +64,81 @@ public class MemoServiceImpl implements MemoService {
 
         memo.replaceAttachments(attachments);
         return MemoDto.from(memoRepository.saveAndFlush(memo), this::resolveAttachmentUrl);
+    }
+
+    @Override
+    @Transactional
+    public MemoDto createImageMemo(String content, MultipartFile file) {
+        ImageUploadResponse uploadResponse = uploadService.uploadImages(List.of(file));
+        List<String> keys = uploadResponse.keys();
+        try {
+            return createMemo(new NewMemoDto(
+                    null,
+                    null,
+                    content,
+                    null,
+                    keys,
+                    null,
+                    null,
+                    null
+            ));
+        } catch (RuntimeException e) {
+            deleteUploadedKeys(keys);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional
+    public MemoDto createVideoMemo(String content, MultipartFile file) {
+        VideoUploadResponse uploadResponse = uploadService.uploadVideo(file);
+        List<String> keys = uploadResponse.key() == null ? List.of() : List.of(uploadResponse.key());
+        try {
+            return createMemo(new NewMemoDto(
+                    null,
+                    null,
+                    content,
+                    null,
+                    null,
+                    null,
+                    keys,
+                    null
+            ));
+        } catch (RuntimeException e) {
+            deleteUploadedKeys(keys);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional
+    public MemoDto createFileMemo(String content, MultipartFile file) {
+        FileUploadResponse uploadResponse = uploadService.uploadFile(file);
+        List<String> keys = uploadResponse.key() == null ? List.of() : List.of(uploadResponse.key());
+        try {
+            return createMemo(new NewMemoDto(
+                    null,
+                    null,
+                    content,
+                    null,
+                    null,
+                    null,
+                    null,
+                    List.of(new FileAttachmentDto(
+                            uploadResponse.uid(),
+                            uploadResponse.name(),
+                            uploadResponse.url(),
+                            uploadResponse.key(),
+                            uploadResponse.mimeType(),
+                            uploadResponse.size(),
+                            null,
+                            null
+                    ))
+            ));
+        } catch (RuntimeException e) {
+            deleteUploadedKeys(keys);
+            throw e;
+        }
     }
 
     @Override
@@ -163,7 +243,7 @@ public class MemoServiceImpl implements MemoService {
             List<String> videoKeys,
             List<FileAttachmentDto> files
     ) {
-        java.util.ArrayList<NoteAttachment> attachments = new java.util.ArrayList<>();
+        ArrayList<NoteAttachment> attachments = new ArrayList<>();
 
         addUrlAttachments(attachments, userUid, AttachmentType.IMAGE, imageUris, null);
         addKeyAttachments(attachments, userUid, AttachmentType.IMAGE, imageKeys);
@@ -351,6 +431,20 @@ public class MemoServiceImpl implements MemoService {
                 && !value.startsWith("https://")
                 && value.contains("/users/")
                 && (value.contains("/images/") || value.contains("/videos/") || value.contains("/files/"));
+    }
+
+    private void deleteUploadedKeys(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+        keys.stream()
+                .filter(key -> key != null && !key.isBlank())
+                .forEach(key -> {
+                    try {
+                        uploadService.deleteObject(key);
+                    } catch (RuntimeException ignored) {
+                    }
+                });
     }
 
     private String resolveAttachmentUrl(NoteAttachment attachment) {
