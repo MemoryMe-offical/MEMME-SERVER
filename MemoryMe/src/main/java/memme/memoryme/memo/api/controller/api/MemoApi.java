@@ -24,7 +24,14 @@ import java.util.UUID;
 })
 @RequestMapping({"/v1/memos", "/v1/memo"})
 public interface MemoApi {
-    @Operation(summary = "메모 생성")
+    @Operation(
+            summary = "메모 생성",
+            description = """
+                    텍스트 메모 또는 첨부만 있는 메모를 생성합니다.
+                    이미지/영상/파일은 먼저 업로드 API로 올린 뒤, 업로드 응답의 key를 imageKeys/videoKeys/files[].key로 전달합니다.
+                    content가 없어도 이미지, 영상, 파일 중 하나 이상 있으면 메모 생성이 가능합니다.
+                    """
+    )
     @PostMapping
     ResponseEntity<ResponseWrapper<MemoDto>> createMemo(
             @Parameter(description = "새 메모")
