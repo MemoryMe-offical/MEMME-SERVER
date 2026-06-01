@@ -19,38 +19,12 @@
           "decompound_mode": "mixed"
         }
       },
-      "filter": {
-        "memme_nori_pos_filter": {
-          "type": "nori_part_of_speech",
-          "stoptags": [
-            "E",
-            "IC",
-            "J",
-            "MAG",
-            "MAJ",
-            "MM",
-            "SP",
-            "SSC",
-            "SSO",
-            "SC",
-            "SE",
-            "XPN",
-            "XSA",
-            "XSN",
-            "XSV",
-            "UNA",
-            "NA",
-            "VSV"
-          ]
-        }
-      },
       "analyzer": {
         "memme_korean": {
           "type": "custom",
           "tokenizer": "memme_nori_tokenizer",
           "filter": [
-            "lowercase",
-            "memme_nori_pos_filter"
+            "lowercase"
           ]
         },
         "memme_ngram": {
