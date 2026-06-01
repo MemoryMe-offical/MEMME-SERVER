@@ -153,6 +153,11 @@
         "type": "text",
         "analyzer": "memme_korean",
         "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "memme_keyword"
+          },
           "ngram": {
             "type": "text",
             "analyzer": "memme_ngram",
@@ -162,11 +167,25 @@
       },
       "ogDescription": {
         "type": "text",
-        "analyzer": "memme_korean"
+        "analyzer": "memme_korean",
+        "fields": {
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
       },
       "ogSummary": {
         "type": "text",
-        "analyzer": "memme_korean"
+        "analyzer": "memme_korean",
+        "fields": {
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
       },
       "attachmentNames": {
         "type": "text",

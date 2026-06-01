@@ -17,11 +17,13 @@ import memme.memoryme.note.api.dto.FileAttachmentDto;
 import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
+import memme.memoryme.search.application.service.SearchReindexEvent;
 import memme.memoryme.upload.api.dto.FileUploadResponse;
 import memme.memoryme.upload.api.dto.ImageUploadResponse;
 import memme.memoryme.upload.api.dto.VideoUploadResponse;
 import memme.memoryme.upload.application.service.S3ObjectUrlBuilder;
 import memme.memoryme.upload.application.service.UploadService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +44,7 @@ public class MemoServiceImpl implements MemoService {
     private final UserReader userReader;
     private final S3ObjectUrlBuilder objectUrlBuilder;
     private final UploadService uploadService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -63,7 +66,9 @@ public class MemoServiceImpl implements MemoService {
                 .build();
 
         memo.replaceAttachments(attachments);
-        return MemoDto.from(memoRepository.saveAndFlush(memo), this::resolveAttachmentUrl);
+        Memo savedMemo = memoRepository.saveAndFlush(memo);
+        publishSearchReindex(userUid);
+        return MemoDto.from(savedMemo, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -154,6 +159,7 @@ public class MemoServiceImpl implements MemoService {
         Memo memo = memoRepository.findByUidAndUserUid(memoUid, userUid)
                 .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
         memoRepository.delete(memo);
+        publishSearchReindex(userUid);
     }
 
     @Override
@@ -164,6 +170,7 @@ public class MemoServiceImpl implements MemoService {
                 .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
 
         memo.changeBookmarked(request != null && request.valueOrFalse());
+        publishSearchReindex(userUid);
         return MemoDto.from(memo, this::resolveAttachmentUrl);
     }
 
@@ -192,6 +199,7 @@ public class MemoServiceImpl implements MemoService {
         Board savedBoard = boardRepository.saveAndFlush(board);
         memoRepository.delete(memo);
         memoRepository.flush();
+        publishSearchReindex(userUid);
         return BoardDto.from(savedBoard, this::resolveAttachmentUrl);
     }
 
@@ -209,6 +217,7 @@ public class MemoServiceImpl implements MemoService {
         boardRepository.flush();
         memoRepository.delete(memo);
         memoRepository.flush();
+        publishSearchReindex(userUid);
         return BoardDto.from(board, this::resolveAttachmentUrl);
     }
 
@@ -477,5 +486,9 @@ public class MemoServiceImpl implements MemoService {
                 && (normalized.contains("/images/") || normalized.contains("/videos/") || normalized.contains("/files/"))
                 ? normalized
                 : null;
+    }
+
+    private void publishSearchReindex(UUID userUid) {
+        eventPublisher.publishEvent(new SearchReindexEvent(userUid));
     }
 }
