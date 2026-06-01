@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -186,9 +187,11 @@ public class MemoServiceImpl implements MemoService {
                 .description(blankToNull(request.description()))
                 .tags(normalizeTags(request.tags()))
                 .bookmarked(false)
+                .createdAt(request.createdAt())
+                .updatedAt(request.createdAt())
                 .build();
 
-        board.addNote(createNoteFromMemo(memo, request.noteTitle(), request.content()));
+        board.addNote(createNoteFromMemo(memo, request.noteTitle(), request.content(), request.createdAt()), request.createdAt() == null);
         Board savedBoard = boardRepository.saveAndFlush(board);
         memoRepository.delete(memo);
         memoRepository.flush();
@@ -205,7 +208,8 @@ public class MemoServiceImpl implements MemoService {
 
         String noteTitle = request == null ? null : request.noteTitle();
         String content = request == null ? null : request.content();
-        board.addNote(createNoteFromMemo(memo, noteTitle, content));
+        LocalDateTime createdAt = request == null ? null : request.createdAt();
+        board.addNote(createNoteFromMemo(memo, noteTitle, content, createdAt));
         boardRepository.flush();
         memoRepository.delete(memo);
         memoRepository.flush();
@@ -217,7 +221,7 @@ public class MemoServiceImpl implements MemoService {
                 .orElseThrow(() -> new BusinessException(MemoErrorCode.MEMO_NOT_FOUND));
     }
 
-    private Note createNoteFromMemo(Memo memo, String noteTitle, String content) {
+    private Note createNoteFromMemo(Memo memo, String noteTitle, String content, LocalDateTime createdAt) {
         String title = blankToNull(noteTitle);
         if (title == null) {
             title = blankToNull(memo.getText());
@@ -236,8 +240,11 @@ public class MemoServiceImpl implements MemoService {
                 .uid(UUID.randomUUID())
                 .title(title)
                 .content(blankToNull(content))
+                .createdAt(createdAt)
+                .updatedAt(createdAt)
                 .build();
         note.replaceAttachments(copyAttachments(memo.getAttachments()));
+        note.applyCreatedAt(createdAt);
         return note;
     }
 
