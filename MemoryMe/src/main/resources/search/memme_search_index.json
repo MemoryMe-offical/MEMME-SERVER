@@ -1,5 +1,8 @@
 {
   "settings": {
+    "index": {
+      "max_ngram_diff": 13
+    },
     "analysis": {
       "tokenizer": {
         "memme_ngram_tokenizer": {
