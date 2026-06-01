@@ -1,0 +1,217 @@
+{
+  "settings": {
+    "analysis": {
+      "tokenizer": {
+        "memme_ngram_tokenizer": {
+          "type": "ngram",
+          "min_gram": 2,
+          "max_gram": 15,
+          "token_chars": [
+            "letter",
+            "digit"
+          ]
+        },
+        "memme_nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed"
+        }
+      },
+      "filter": {
+        "memme_nori_pos_filter": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "E",
+            "IC",
+            "J",
+            "MAG",
+            "MAJ",
+            "MM",
+            "SP",
+            "SSC",
+            "SSO",
+            "SC",
+            "SE",
+            "XPN",
+            "XSA",
+            "XSN",
+            "XSV",
+            "UNA",
+            "NA",
+            "VSV"
+          ]
+        }
+      },
+      "analyzer": {
+        "memme_korean": {
+          "type": "custom",
+          "tokenizer": "memme_nori_tokenizer",
+          "filter": [
+            "lowercase",
+            "memme_nori_pos_filter"
+          ]
+        },
+        "memme_ngram": {
+          "type": "custom",
+          "tokenizer": "memme_ngram_tokenizer",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      },
+      "normalizer": {
+        "memme_keyword": {
+          "type": "custom",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": "false",
+    "properties": {
+      "type": {
+        "type": "keyword"
+      },
+      "uid": {
+        "type": "keyword"
+      },
+      "userUid": {
+        "type": "keyword"
+      },
+      "parentType": {
+        "type": "keyword"
+      },
+      "parentUid": {
+        "type": "keyword"
+      },
+      "parentTitle": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "memme_keyword"
+          },
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "memme_keyword"
+          },
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "tags": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 128,
+            "normalizer": "memme_keyword"
+          },
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "urls": {
+        "type": "keyword",
+        "ignore_above": 2048
+      },
+      "ogTitle": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "memme_keyword"
+          },
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "ogDescription": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "ogSummary": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "attachmentNames": {
+        "type": "text",
+        "analyzer": "memme_korean",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256,
+            "normalizer": "memme_keyword"
+          },
+          "ngram": {
+            "type": "text",
+            "analyzer": "memme_ngram",
+            "search_analyzer": "memme_korean"
+          }
+        }
+      },
+      "bookmarked": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "date"
+      },
+      "updatedAt": {
+        "type": "date"
+      }
+    }
+  }
+}
