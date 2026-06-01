@@ -149,7 +149,8 @@ public class LocalUploadService implements UploadService {
                     .sorted(Comparator.comparing(this::lastModified).reversed())
                     .map(path -> {
                         String url = "/uploads/" + directory + "/" + path.getFileName();
-                        return new UploadObjectDto(directory, url, url, size(path), lastModified(path));
+                        String name = path.getFileName().toString();
+                        return new UploadObjectDto(directory, name, url, url, size(path), lastModified(path));
                     })
                     .toList();
             return new UploadObjectListResponse(objects, objects.size(), totalSize(objects));

@@ -57,19 +57,7 @@ public class MemoServiceImpl implements MemoService {
         }
         String text = blankToNull(request.resolvedText());
         List<NoteAttachment> attachments = toAttachments(userUid, request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files());
-        validateMemo(text, attachments);
-
-        Memo memo = Memo.builder()
-                .uid(UUID.randomUUID())
-                .userUid(userUid)
-                .text(text)
-                .bookmarked(false)
-                .build();
-
-        memo.replaceAttachments(attachments);
-        Memo savedMemo = memoRepository.saveAndFlush(memo);
-        publishSearchReindex(userUid);
-        return MemoDto.from(savedMemo, this::resolveAttachmentUrl);
+        return saveMemo(userUid, text, attachments);
     }
 
     @Override
@@ -83,17 +71,16 @@ public class MemoServiceImpl implements MemoService {
     public MemoDto createImageMemo(String content, List<MultipartFile> files) {
         ImageUploadResponse uploadResponse = uploadService.uploadImages(files);
         List<String> keys = uploadResponse.keys();
+        List<NoteAttachment> attachments = toKeyAttachments(
+                currentUserProvider.getUid(),
+                AttachmentType.IMAGE,
+                uploadResponse.keys(),
+                uploadResponse.names()
+        );
         try {
-            return createMemo(new NewMemoDto(
-                    null,
-                    null,
-                    content,
-                    null,
-                    keys,
-                    null,
-                    null,
-                    null
-            ));
+            UUID userUid = currentUserProvider.getUid();
+            validateUserExists(userUid);
+            return saveMemo(userUid, blankToNull(content), attachments);
         } catch (RuntimeException e) {
             deleteUploadedKeys(keys);
             throw e;
@@ -105,17 +92,16 @@ public class MemoServiceImpl implements MemoService {
     public MemoDto createVideoMemo(String content, MultipartFile file) {
         VideoUploadResponse uploadResponse = uploadService.uploadVideo(file);
         List<String> keys = uploadResponse.key() == null ? List.of() : List.of(uploadResponse.key());
+        List<NoteAttachment> attachments = toKeyAttachments(
+                currentUserProvider.getUid(),
+                AttachmentType.VIDEO,
+                keys,
+                uploadResponse.name() == null ? List.of() : List.of(uploadResponse.name())
+        );
         try {
-            return createMemo(new NewMemoDto(
-                    null,
-                    null,
-                    content,
-                    null,
-                    null,
-                    null,
-                    keys,
-                    null
-            ));
+            UUID userUid = currentUserProvider.getUid();
+            validateUserExists(userUid);
+            return saveMemo(userUid, blankToNull(content), attachments);
         } catch (RuntimeException e) {
             deleteUploadedKeys(keys);
             throw e;
@@ -285,6 +271,51 @@ public class MemoServiceImpl implements MemoService {
         }
 
         return attachments;
+    }
+
+    private MemoDto saveMemo(UUID userUid, String text, List<NoteAttachment> attachments) {
+        validateMemo(text, attachments);
+
+        Memo memo = Memo.builder()
+                .uid(UUID.randomUUID())
+                .userUid(userUid)
+                .text(text)
+                .bookmarked(false)
+                .build();
+
+        memo.replaceAttachments(attachments);
+        Memo savedMemo = memoRepository.saveAndFlush(memo);
+        publishSearchReindex(userUid);
+        return MemoDto.from(savedMemo, this::resolveAttachmentUrl);
+    }
+
+    private List<NoteAttachment> toKeyAttachments(UUID userUid, AttachmentType type, List<String> keys, List<String> names) {
+        if (keys == null || keys.isEmpty()) {
+            return List.of();
+        }
+        List<NoteAttachment> attachments = new ArrayList<>();
+        for (int i = 0; i < keys.size(); i++) {
+            String key = blankToNull(keys.get(i));
+            if (key == null) {
+                continue;
+            }
+            attachments.add(NoteAttachment.builder()
+                    .uid(UUID.randomUUID())
+                    .userUid(userUid)
+                    .type(type)
+                    .originalName(nameAt(names, i))
+                    .url(objectUrlBuilder.build(key))
+                    .s3Key(key)
+                    .build());
+        }
+        return attachments;
+    }
+
+    private String nameAt(List<String> names, int index) {
+        if (names == null || index < 0 || index >= names.size()) {
+            return null;
+        }
+        return blankToNull(names.get(index));
     }
 
     private void addUrlAttachments(List<NoteAttachment> attachments, UUID userUid, AttachmentType type, List<String> urls, String originalName) {
