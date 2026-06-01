@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/elasticsearch/Dockerfile
-    image: memme-elasticsearch:8.15.5-nori
+    image: memme-elasticsearch:9.2.3-nori
     container_name: memme-elasticsearch
     environment:
       discovery.type: single-node
@@ -21,7 +21,7 @@ services:
       retries: 12
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.5
+    image: docker.elastic.co/kibana/kibana:9.2.3
     container_name: memme-kibana
     profiles:
       - tools
