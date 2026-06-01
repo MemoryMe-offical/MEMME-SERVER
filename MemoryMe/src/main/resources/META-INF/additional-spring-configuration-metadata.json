@@ -46,6 +46,11 @@
       "description": "Elasticsearch index name for integrated MemoryMe search."
     },
     {
+      "name": "search.initialize-index",
+      "type": "java.lang.Boolean",
+      "description": "Whether the application should create the Elasticsearch index on startup when search is enabled."
+    },
+    {
       "name": "spring.elasticsearch.uris",
       "type": "java.lang.String",
       "description": "Elasticsearch HTTP endpoint URI."

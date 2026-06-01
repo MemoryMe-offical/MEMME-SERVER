@@ -104,6 +104,7 @@ ai:
 search:
   enabled: ${SEARCH_ENABLED:false}
   index-name: ${SEARCH_INDEX_NAME:memme_search}
+  initialize-index: ${SEARCH_INITIALIZE_INDEX:true}
 
 cloud:
   aws:

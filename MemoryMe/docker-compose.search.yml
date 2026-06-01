@@ -1,6 +1,9 @@
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.5
+    build:
+      context: .
+      dockerfile: docker/elasticsearch/Dockerfile
+    image: memme-elasticsearch:8.15.5-nori
     container_name: memme-elasticsearch
     environment:
       discovery.type: single-node
