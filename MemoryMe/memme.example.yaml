@@ -12,6 +12,9 @@ OPENAI_API_KEY: your-openai-api-key
 OPENAI_MODEL: gpt-4o-mini
 OPENAI_TIMEOUT_SECONDS: 12
 OPENAI_MAX_TOKENS: 500
+SEARCH_ENABLED: false
+SEARCH_INDEX_NAME: memme_search
+ELASTICSEARCH_URIS: http://localhost:9200
 AWS_S3_BUCKET: your-s3-bucket
 AWS_REGION: ap-northeast-2
 AWS_S3_BASE: prod/memme

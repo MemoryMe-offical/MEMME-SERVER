@@ -32,6 +32,9 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -97,6 +100,10 @@ ai:
     model: ${OPENAI_MODEL:gpt-4o-mini}
     timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:12}
     max-tokens: ${OPENAI_MAX_TOKENS:500}
+
+search:
+  enabled: ${SEARCH_ENABLED:false}
+  index-name: ${SEARCH_INDEX_NAME:memme_search}
 
 cloud:
   aws:

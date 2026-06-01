@@ -34,5 +34,20 @@
       "name": "ai.openai.max-tokens",
       "type": "java.lang.Integer",
       "description": "Maximum tokens for OpenAI summary responses."
+    },
+    {
+      "name": "search.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether server-side Elasticsearch search is enabled."
+    },
+    {
+      "name": "search.index-name",
+      "type": "java.lang.String",
+      "description": "Elasticsearch index name for integrated MemoryMe search."
+    },
+    {
+      "name": "spring.elasticsearch.uris",
+      "type": "java.lang.String",
+      "description": "Elasticsearch HTTP endpoint URI."
     }
   ] }
