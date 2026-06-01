@@ -54,5 +54,10 @@
       "name": "spring.elasticsearch.uris",
       "type": "java.lang.String",
       "description": "Elasticsearch HTTP endpoint URI."
+    },
+    {
+      "name": "management.health.elasticsearch.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether Elasticsearch health checks are enabled."
     }
   ] }

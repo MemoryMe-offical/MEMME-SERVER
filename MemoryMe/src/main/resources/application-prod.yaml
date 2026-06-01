@@ -118,6 +118,8 @@ cloud:
 
 management:
   health:
+    elasticsearch:
+      enabled: ${SEARCH_ENABLED:false}
     mail:
       enabled: false
 
