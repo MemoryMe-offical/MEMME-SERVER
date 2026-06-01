@@ -89,6 +89,14 @@ public class Note {
         this.sortOrder = sortOrder;
     }
 
+    public void applyCreatedAt(LocalDateTime createdAt) {
+        if (createdAt == null) {
+            return;
+        }
+        this.createdAt = createdAt;
+        this.updatedAt = createdAt;
+    }
+
     public void update(String title, String content, List<String> urls, String ogTitle, String ogDescription, String ogImageUrl, String ogSiteName, String ogSummary) {
         this.title = title;
         this.content = content;

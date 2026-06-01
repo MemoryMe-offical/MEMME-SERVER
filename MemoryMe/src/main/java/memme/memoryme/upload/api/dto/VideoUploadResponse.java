@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "영상 업로드 응답 DTO")
 public record VideoUploadResponse(
+        @Schema(description = "영상 원본 파일명", example = "clip.mp4")
+        String name,
         @Schema(description = "영상 접근 URL", example = "/v1/upload/object?key=prod/memme/users/user-uid/videos/video.mp4")
         String url,
         @Schema(description = "S3 객체 key", example = "prod/memme/users/user-uid/videos/video.mp4")

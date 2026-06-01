@@ -32,10 +32,12 @@ public class LocalUploadService implements UploadService {
         if (files == null || files.isEmpty() || files.size() > 10) {
             throw new BusinessException(UploadErrorCode.INVALID_UPLOAD_REQUEST);
         }
+        List<StoredFile> storedFiles = files.stream()
+                .map(file -> storeFile(file, "images"))
+                .toList();
         return new ImageUploadResponse(
-                files.stream()
-                        .map(file -> store(file, "images"))
-                        .toList(),
+                storedFiles.stream().map(StoredFile::originalName).toList(),
+                storedFiles.stream().map(StoredFile::url).toList(),
                 List.of()
         );
     }
@@ -43,7 +45,7 @@ public class LocalUploadService implements UploadService {
     @Override
     public VideoUploadResponse uploadVideo(MultipartFile file) {
         StoredFile storedFile = storeFile(file, "videos");
-        return new VideoUploadResponse(storedFile.url(), null, null, null, storedFile.size());
+        return new VideoUploadResponse(storedFile.originalName(), storedFile.url(), null, null, null, storedFile.size());
     }
 
     @Override
@@ -81,10 +83,6 @@ public class LocalUploadService implements UploadService {
                 listUploadedObjects("videos"),
                 listUploadedObjects("files")
         );
-    }
-
-    private String store(MultipartFile file, String directory) {
-        return storeFile(file, directory).url();
     }
 
     private StoredFile storeFile(MultipartFile file, String directory) {

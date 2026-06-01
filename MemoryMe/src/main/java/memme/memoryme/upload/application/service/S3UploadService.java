@@ -52,6 +52,7 @@ public class S3UploadService implements UploadService {
                 .toList();
 
         return new ImageUploadResponse(
+                storedFiles.stream().map(StoredS3File::originalName).toList(),
                 storedFiles.stream().map(StoredS3File::url).toList(),
                 storedFiles.stream().map(StoredS3File::key).toList()
         );
@@ -61,6 +62,7 @@ public class S3UploadService implements UploadService {
     public VideoUploadResponse uploadVideo(MultipartFile file) {
         StoredS3File storedFile = upload(file, "videos", "video/");
         return new VideoUploadResponse(
+                storedFile.originalName(),
                 storedFile.url(),
                 storedFile.key(),
                 null,
