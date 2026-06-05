@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import memme.memoryme.auth.api.dto.email.*;
+import memme.memoryme.auth.api.dto.kakao.KakaoLoginRequestDTO;
 import memme.memoryme.auth.api.dto.pw.PwResetRequestDTO;
 import memme.memoryme.global.util.response.ResponseWrapper;
 import org.springframework.http.ResponseEntity;
@@ -54,5 +55,13 @@ public interface AuthApi {
     ResponseEntity<ResponseWrapper<Void>> resetPassword(
             @Parameter(description = "비밀번호 재설정 요청")
             @RequestBody PwResetRequestDTO request
+    );
+
+    @Operation(summary = "카카오 로그인")
+    @PostMapping("/kakao")
+    ResponseEntity<ResponseWrapper<LoginResponseDTO>> kakaoLogin(
+            @Parameter(description = "카카오 로그인 요청")
+            @RequestBody KakaoLoginRequestDTO request
+
     );
 }

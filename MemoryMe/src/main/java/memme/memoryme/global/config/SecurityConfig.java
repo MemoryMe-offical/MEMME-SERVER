@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 "/v1/auth/login",
                                 "/v1/auth/register",
                                 "/v1/email/**",
-                                "/uploads/**"
+                                "/uploads/**",
+                                "/v1/auth/kakao"
                         ).permitAll()
 
                         .anyRequest().authenticated()

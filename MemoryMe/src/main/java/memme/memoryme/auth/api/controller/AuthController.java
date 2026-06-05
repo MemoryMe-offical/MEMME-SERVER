@@ -3,6 +3,7 @@ package memme.memoryme.auth.api.controller;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.auth.api.controller.api.AuthApi;
 import memme.memoryme.auth.api.dto.email.*;
+import memme.memoryme.auth.api.dto.kakao.KakaoLoginRequestDTO;
 import memme.memoryme.auth.api.dto.pw.PwResetRequestDTO;
 import memme.memoryme.auth.application.service.AuthService;
 import memme.memoryme.global.util.response.ResponseWrapper;
@@ -53,23 +54,22 @@ public class AuthController implements AuthApi {
     public ResponseEntity<ResponseWrapper<EmailResponseDTO>> requestPasswordResetEmail(@RequestParam String  email) {
         EmailResponseDTO response = authService.requestPasswordResetEmail(email);
         return ResponseEntity.ok(
-                ResponseWrapper.ok(
-                        200,
-                        "비밀번호 재설정 인증 메일 발송 완료",
-                        response
-                )
+                ResponseWrapper.ok(200, "비밀번호 재설정 인증 메일 발송 완료", response)
         );
     }
     @Override
-    public ResponseEntity<ResponseWrapper<VerifyEmailResponseDTO>> verifyPasswordResetEmail(@RequestParam String email,
-                                                                                            @RequestParam String code) {
+    public ResponseEntity<ResponseWrapper<VerifyEmailResponseDTO>> verifyPasswordResetEmail(@RequestParam String email, @RequestParam String code) {
         VerifyEmailResponseDTO response = authService.verifyPasswordResetEmail(email, code);
         return ResponseEntity.ok(
-                ResponseWrapper.ok(
-                        200,
-                        "비밀번호 재설정 이메일 인증 완료",
-                        response
-                )
+                ResponseWrapper.ok(200, "비밀번호 재설정 이메일 인증 완료", response)
+        );
+    }
+
+    @Override
+    public ResponseEntity<ResponseWrapper<LoginResponseDTO>> kakaoLogin(@RequestBody KakaoLoginRequestDTO request) {
+        LoginResponseDTO response = authService.kakaoLogin(request);
+        return ResponseEntity.ok(
+                ResponseWrapper.ok(200, "카카오 로그인 성공", response)
         );
     }
 }

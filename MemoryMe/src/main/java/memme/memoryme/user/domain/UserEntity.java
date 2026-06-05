@@ -28,7 +28,7 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String password;
 
     @Column(nullable = false)
@@ -45,4 +45,10 @@ public class UserEntity {
     @Column(name = "refresh_token")
     private String refreshToken;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String provider = "LOCAL";
+
+    @Column
+    private String providerId;
 }
