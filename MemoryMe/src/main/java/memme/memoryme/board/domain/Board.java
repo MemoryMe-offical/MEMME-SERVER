@@ -74,10 +74,16 @@ public class Board {
     }
 
     public void addNote(Note note) {
+        addNote(note, true);
+    }
+
+    public void addNote(Note note, boolean updateTimestamp) {
         note.assignBoard(this);
         note.changeSortOrder(nextSortOrder());
         this.notes.add(note);
-        touch();
+        if (updateTimestamp) {
+            touch();
+        }
     }
 
     public void removeNote(Note note) {

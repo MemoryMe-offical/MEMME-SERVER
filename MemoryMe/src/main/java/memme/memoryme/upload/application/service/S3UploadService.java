@@ -17,6 +17,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -35,6 +36,8 @@ import java.util.stream.Stream;
 @Primary
 @RequiredArgsConstructor
 public class S3UploadService implements UploadService {
+    private static final String ORIGINAL_NAME_METADATA_KEY = "original-name";
+
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final S3StorageProperties properties;
@@ -52,6 +55,7 @@ public class S3UploadService implements UploadService {
                 .toList();
 
         return new ImageUploadResponse(
+                storedFiles.stream().map(StoredS3File::originalName).toList(),
                 storedFiles.stream().map(StoredS3File::url).toList(),
                 storedFiles.stream().map(StoredS3File::key).toList()
         );
@@ -61,6 +65,7 @@ public class S3UploadService implements UploadService {
     public VideoUploadResponse uploadVideo(MultipartFile file) {
         StoredS3File storedFile = upload(file, "videos", "video/");
         return new VideoUploadResponse(
+                storedFile.originalName(),
                 storedFile.url(),
                 storedFile.key(),
                 null,
@@ -151,6 +156,7 @@ public class S3UploadService implements UploadService {
                     .key(key)
                     .contentType(mimeType)
                     .contentLength(file.getSize())
+                    .metadata(java.util.Map.of(ORIGINAL_NAME_METADATA_KEY, originalName))
                     .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
@@ -214,6 +220,7 @@ public class S3UploadService implements UploadService {
                     .filter(object -> !object.key().endsWith("/"))
                     .map(object -> new UploadObjectDto(
                             directory,
+                            originalName(object.key()),
                             createReadUrl(object.key()),
                             object.key(),
                             object.size(),
@@ -224,6 +231,28 @@ public class S3UploadService implements UploadService {
         } catch (S3Exception e) {
             throw new BusinessException(UploadErrorCode.OBJECT_LIST_FAILED);
         }
+    }
+
+    private String originalName(String key) {
+        try {
+            String originalName = s3Client.headObject(HeadObjectRequest.builder()
+                            .bucket(properties.getS3().getBucket())
+                            .key(key)
+                            .build())
+                    .metadata()
+                    .get(ORIGINAL_NAME_METADATA_KEY);
+            return originalName == null || originalName.isBlank() ? fileNameFromKey(key) : originalName;
+        } catch (S3Exception e) {
+            return fileNameFromKey(key);
+        }
+    }
+
+    private String fileNameFromKey(String key) {
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+        int slashIndex = key.lastIndexOf('/');
+        return slashIndex >= 0 ? key.substring(slashIndex + 1) : key;
     }
 
     private UploadObjectListResponse mergeUploadedObjects(UploadObjectListResponse... responses) {

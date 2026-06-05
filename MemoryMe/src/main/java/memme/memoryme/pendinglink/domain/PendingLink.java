@@ -41,6 +41,10 @@ public class PendingLink {
     @Column(name = "og_site_name")
     private String ogSiteName;
 
+    @Lob
+    @Column(name = "og_summary", columnDefinition = "TEXT")
+    private String ogSummary;
+
     @Column(name = "received_at", nullable = false, updatable = false)
     private LocalDateTime receivedAt;
 

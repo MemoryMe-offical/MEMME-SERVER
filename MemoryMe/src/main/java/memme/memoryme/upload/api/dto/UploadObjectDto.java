@@ -8,6 +8,8 @@ import java.time.Instant;
 public record UploadObjectDto(
         @Schema(description = "업로드 객체 카테고리", example = "images")
         String category,
+        @Schema(description = "원본 파일명", example = "photo.jpg")
+        String name,
         @Schema(description = "객체 접근 URL", example = "https://s3-presigned-url...")
         String url,
         @Schema(description = "S3 객체 key", example = "prod/memme/users/user-uid/images/image.webp")

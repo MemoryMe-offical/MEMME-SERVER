@@ -31,4 +31,10 @@ public class OgController {
     public ResponseEntity<ResponseWrapper<OgDataDto>> getOg(@RequestParam String url) {
         return ResponseEntity.ok(ResponseWrapper.ok(200, "OG 데이터 조회 성공", ogService.fetch(url)));
     }
+
+    @Operation(summary = "OG 메타데이터 AI 요약 조회")
+    @GetMapping("/summary")
+    public ResponseEntity<ResponseWrapper<OgDataDto>> getOgSummary(@RequestParam String url) {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "OG AI 요약 조회 성공", ogService.fetchWithSummary(url)));
+    }
 }

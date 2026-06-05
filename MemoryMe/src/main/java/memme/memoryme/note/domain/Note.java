@@ -63,6 +63,10 @@ public class Note {
     @Column(name = "og_site_name")
     private String ogSiteName;
 
+    @Lob
+    @Column(name = "og_summary", columnDefinition = "TEXT")
+    private String ogSummary;
+
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
@@ -85,7 +89,15 @@ public class Note {
         this.sortOrder = sortOrder;
     }
 
-    public void update(String title, String content, List<String> urls, String ogTitle, String ogDescription, String ogImageUrl, String ogSiteName) {
+    public void applyCreatedAt(LocalDateTime createdAt) {
+        if (createdAt == null) {
+            return;
+        }
+        this.createdAt = createdAt;
+        this.updatedAt = createdAt;
+    }
+
+    public void update(String title, String content, List<String> urls, String ogTitle, String ogDescription, String ogImageUrl, String ogSiteName, String ogSummary) {
         this.title = title;
         this.content = content;
         replaceUrls(urls);
@@ -93,6 +105,7 @@ public class Note {
         this.ogDescription = ogDescription;
         this.ogImageUrl = ogImageUrl;
         this.ogSiteName = ogSiteName;
+        this.ogSummary = ogSummary;
         touch();
     }
 

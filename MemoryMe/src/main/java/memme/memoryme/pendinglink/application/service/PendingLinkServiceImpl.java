@@ -40,6 +40,7 @@ public class PendingLinkServiceImpl implements PendingLinkService {
                 .ogDescription(ogData != null ? ogData.description() : null)
                 .ogImageUrl(ogData != null ? ogData.imageUrl() : null)
                 .ogSiteName(ogData != null ? ogData.siteName() : null)
+                .ogSummary(ogData != null ? ogData.summary() : null)
                 .build();
 
         return new CreatePendingLinkResponse(PendingLinkDto.from(pendingLinkRepository.save(pendingLink)));

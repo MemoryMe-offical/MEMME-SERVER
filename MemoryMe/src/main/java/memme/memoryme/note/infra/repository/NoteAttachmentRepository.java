@@ -22,6 +22,7 @@ public interface NoteAttachmentRepository extends JpaRepository<NoteAttachment, 
             from NoteAttachment attachment
             left join fetch attachment.note note
             left join fetch note.board
+            left join fetch attachment.memo memo
             where attachment.userUid = :userUid
               and attachment.status = :status
               and (:type is null or attachment.type = :type)

@@ -10,6 +10,8 @@ import java.util.function.Function;
 public record MediaAttachmentDto(
         @Schema(description = "첨부 UID", example = "550e8400-e29b-41d4-a716-446655440000")
         UUID uid,
+        @Schema(description = "원본 파일명", example = "photo.jpg")
+        String name,
         @Schema(description = "접근 URL", example = "https://s3-presigned-url...")
         String url,
         @Schema(description = "S3 객체 key", example = "prod/memme/users/user-uid/images/image.webp")
@@ -26,6 +28,7 @@ public record MediaAttachmentDto(
     public static MediaAttachmentDto from(NoteAttachment attachment, Function<NoteAttachment, String> urlResolver) {
         return new MediaAttachmentDto(
                 attachment.getUid(),
+                attachment.getOriginalName(),
                 urlResolver == null ? attachment.getUrl() : urlResolver.apply(attachment),
                 resolveKey(attachment),
                 attachment.getMimeType(),

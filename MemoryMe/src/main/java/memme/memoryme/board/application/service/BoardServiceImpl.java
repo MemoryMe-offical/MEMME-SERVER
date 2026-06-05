@@ -13,8 +13,10 @@ import memme.memoryme.note.domain.AttachmentType;
 import memme.memoryme.note.domain.Note;
 import memme.memoryme.note.domain.NoteAttachment;
 import memme.memoryme.note.infra.repository.NoteRepository;
+import memme.memoryme.search.application.service.SearchReindexEvent;
 import memme.memoryme.upload.application.service.S3ObjectUrlBuilder;
 import memme.memoryme.upload.application.service.UploadService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class BoardServiceImpl implements BoardService {
     private final UserReader userReader;
     private final S3ObjectUrlBuilder objectUrlBuilder;
     private final UploadService uploadService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -47,9 +50,13 @@ public class BoardServiceImpl implements BoardService {
                 .description(blankToNull(request.description()))
                 .tags(normalizeTags(request.tags()))
                 .bookmarked(false)
+                .createdAt(request.createdAt())
+                .updatedAt(request.createdAt())
                 .build();
 
-        return BoardDto.from(boardRepository.saveAndFlush(board), this::resolveAttachmentUrl);
+        Board savedBoard = boardRepository.saveAndFlush(board);
+        publishSearchReindex(savedBoard.getUserUid());
+        return BoardDto.from(savedBoard, this::resolveAttachmentUrl);
     }
 
     @Override
@@ -73,6 +80,7 @@ public class BoardServiceImpl implements BoardService {
                 normalizeTags(request.tags())
         );
         boardRepository.flush();
+        publishSearchReindex(board.getUserUid());
         return BoardDto.from(board, this::resolveAttachmentUrl);
     }
 
@@ -83,6 +91,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardRepository.findByUidAndUserUid(boardUid, userUid)
                 .orElseThrow(() -> new BusinessException(BoardErrorCode.BOARD_NOT_FOUND));
         boardRepository.delete(board);
+        publishSearchReindex(userUid);
     }
 
     @Override
@@ -91,6 +100,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = getCurrentUserBoard(boardUid);
         board.changeBookmarked(request != null && request.valueOrFalse());
         boardRepository.flush();
+        publishSearchReindex(board.getUserUid());
         return BoardDto.from(board, this::resolveAttachmentUrl);
     }
 
@@ -115,11 +125,13 @@ public class BoardServiceImpl implements BoardService {
                 .ogDescription(ogData != null ? blankToNull(ogData.description()) : null)
                 .ogImageUrl(ogData != null ? blankToNull(ogData.imageUrl()) : null)
                 .ogSiteName(ogData != null ? blankToNull(ogData.siteName()) : null)
+                .ogSummary(ogData != null ? blankToNull(ogData.summary()) : null)
                 .build();
 
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.addNote(note);
         boardRepository.flush();
+        publishSearchReindex(board.getUserUid());
         return NoteDto.from(note, this::resolveAttachmentUrl);
     }
 
@@ -141,11 +153,13 @@ public class BoardServiceImpl implements BoardService {
                 ogData != null ? blankToNull(ogData.title()) : null,
                 ogData != null ? blankToNull(ogData.description()) : null,
                 ogData != null ? blankToNull(ogData.imageUrl()) : null,
-                ogData != null ? blankToNull(ogData.siteName()) : null
+                ogData != null ? blankToNull(ogData.siteName()) : null,
+                ogData != null ? blankToNull(ogData.summary()) : null
         );
         note.replaceAttachments(toAttachments(board.getUserUid(), request.imageUris(), request.imageKeys(), request.videoUris(), request.videoKeys(), request.files()));
         board.touch();
         boardRepository.flush();
+        publishSearchReindex(board.getUserUid());
         return NoteDto.from(note, this::resolveAttachmentUrl);
     }
 
@@ -157,6 +171,7 @@ public class BoardServiceImpl implements BoardService {
         board.removeNote(note);
         noteRepository.delete(note);
         boardRepository.flush();
+        publishSearchReindex(board.getUserUid());
     }
 
     @Override
@@ -195,6 +210,7 @@ public class BoardServiceImpl implements BoardService {
             targetBoard.addNote(note);
         });
         boardRepository.flush();
+        publishSearchReindex(sourceBoard.getUserUid());
 
         return new MoveNoteResponse(
                 noteUids,
@@ -426,5 +442,9 @@ public class BoardServiceImpl implements BoardService {
             return attachment.getUrl();
         }
         return uploadService.createReadUrl(key);
+    }
+
+    private void publishSearchReindex(UUID userUid) {
+        eventPublisher.publishEvent(new SearchReindexEvent(userUid));
     }
 }

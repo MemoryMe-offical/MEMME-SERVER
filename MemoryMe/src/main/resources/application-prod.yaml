@@ -32,6 +32,9 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -89,7 +92,19 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 3600000
-  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:1209600000}
+
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    model: ${OPENAI_MODEL:gpt-4o-mini}
+    timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:12}
+    max-tokens: ${OPENAI_MAX_TOKENS:500}
+
+search:
+  enabled: ${SEARCH_ENABLED:false}
+  index-name: ${SEARCH_INDEX_NAME:memme_search}
+  initialize-index: ${SEARCH_INITIALIZE_INDEX:true}
 
 cloud:
   aws:
@@ -103,6 +118,8 @@ cloud:
 
 management:
   health:
+    elasticsearch:
+      enabled: ${SEARCH_ENABLED:false}
     mail:
       enabled: false
 
