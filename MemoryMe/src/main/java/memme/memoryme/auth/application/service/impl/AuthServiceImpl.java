@@ -1,5 +1,7 @@
 package memme.memoryme.auth.application.service.impl;
 
+import jakarta.security.auth.message.AuthException;
+import jdk.jshell.spi.ExecutionControl;
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.auth.api.dto.email.EmailResponseDTO;
 import memme.memoryme.auth.api.dto.email.LoginResponseDTO;
@@ -169,6 +171,14 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.findByEmail(email).isEmpty()) {
             throw new BusinessException(AuthErrorCode.USER_NOT_FOUND);}
         return emailService.sendVerificationEmail(email);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String uid) {
+        UserEntity user = userRepository.findByUid(UUID.fromString(uid))
+                .orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_FOUND));
+        user.setRefreshToken(null);
     }
 
     private final JwtUtil tokenProvider;

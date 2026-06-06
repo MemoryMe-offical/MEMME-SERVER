@@ -8,10 +8,12 @@ import memme.memoryme.auth.api.dto.kakao.KakaoLoginRequestDTO;
 import memme.memoryme.auth.api.dto.pw.PwResetRequestDTO;
 import memme.memoryme.global.util.response.ResponseWrapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Tag(name = "Auth API", description = "회원가입 API")
 @RequestMapping("/v1/auth")
@@ -55,6 +57,13 @@ public interface AuthApi {
     ResponseEntity<ResponseWrapper<Void>> resetPassword(
             @Parameter(description = "비밀번호 재설정 요청")
             @RequestBody PwResetRequestDTO request
+    );
+
+    @Operation(summary = "로그아웃")
+    @PostMapping("/logout")
+    ResponseEntity<ResponseWrapper<Void>> logout(
+            @Parameter(description = "인증된 사용자의 고유 식별자(UID)")
+            @AuthenticationPrincipal String uid
     );
 
     @Operation(summary = "카카오 로그인")
