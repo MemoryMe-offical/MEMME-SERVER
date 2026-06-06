@@ -9,6 +9,7 @@ import memme.memoryme.auth.application.service.AuthService;
 import memme.memoryme.global.util.response.ResponseWrapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -63,6 +64,12 @@ public class AuthController implements AuthApi {
         return ResponseEntity.ok(
                 ResponseWrapper.ok(200, "비밀번호 재설정 이메일 인증 완료", response)
         );
+    }
+
+    @Override
+    public ResponseEntity<ResponseWrapper<Void>> logout(@AuthenticationPrincipal String uid) {
+        authService.logout(uid);
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "로그아웃 성공", null));
     }
 
     @Override
