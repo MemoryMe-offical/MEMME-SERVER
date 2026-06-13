@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface SearchIndexService {
     void reindexUser(UUID userUid, List<SearchDocument> documents);
+    void deleteUserIndex(UUID userUid);
 }

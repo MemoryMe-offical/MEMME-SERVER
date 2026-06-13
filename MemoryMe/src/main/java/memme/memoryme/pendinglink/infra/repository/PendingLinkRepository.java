@@ -15,4 +15,5 @@ public interface PendingLinkRepository extends JpaRepository<PendingLink, Long> 
     boolean existsByUidAndUserUid(UUID uid, UUID userUid);
     void deleteByUidAndUserUid(UUID uid, UUID userUid);
     long countByUserUid(UUID userUid);
+    void deleteAllByUserUid(UUID userUid);
 }

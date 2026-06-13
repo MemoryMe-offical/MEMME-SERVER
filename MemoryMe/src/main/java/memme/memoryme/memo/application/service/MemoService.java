@@ -14,6 +14,7 @@ public interface MemoService {
     MemoDto createVideoMemo(String content, MultipartFile file);
     MemoDto createFileMemo(String content, MultipartFile file);
     void deleteMemo(UUID memoUid);
+    void deleteAllByUserUid(UUID userUid);
     MemoDto updateBookmark(UUID memoUid, BookmarkRequest request);
     BoardDto convertToNewBoard(UUID memoUid, ConvertMemoToNewBoardRequest request);
     BoardDto convertToExistingBoard(UUID memoUid, UUID boardUid, ConvertMemoToExistingBoardRequest request);

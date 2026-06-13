@@ -10,4 +10,5 @@ public interface PendingLinkService {
     CreatePendingLinkResponse create(CreatePendingLinkRequest request);
     PendingLinkListResponse getPendingLinks();
     void delete(UUID pendingLinkUid);
+    void deleteAllByUserUid(UUID userUid);
 }

@@ -151,6 +151,13 @@ public class MemoServiceImpl implements MemoService {
 
     @Override
     @Transactional
+    public void deleteAllByUserUid(UUID userUid) {
+        List<Memo> memos = memoRepository.findAllByUserUid(userUid);
+        memoRepository.deleteAll(memos);
+    }
+
+    @Override
+    @Transactional
     public MemoDto updateBookmark(UUID memoUid, BookmarkRequest request) {
         UUID userUid = currentUserProvider.getUid();
         Memo memo = memoRepository.findByUidAndUserUid(memoUid, userUid)

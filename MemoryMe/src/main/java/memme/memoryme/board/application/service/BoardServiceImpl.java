@@ -86,6 +86,13 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    public void deleteAllByUserUid(UUID userUid) {
+        List<Board> boards = boardRepository.findAllByUserUid(userUid);
+        boardRepository.deleteAll(boards);
+    }
+
+    @Override
+    @Transactional
     public void deleteBoard(UUID boardUid) {
         UUID userUid = currentUserProvider.getUid();
         Board board = boardRepository.findByUidAndUserUid(boardUid, userUid)
