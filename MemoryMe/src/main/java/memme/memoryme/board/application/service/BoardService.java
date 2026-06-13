@@ -19,4 +19,5 @@ public interface BoardService {
     void deleteNote(UUID boardUid, UUID noteUid);
     MoveNoteResponse moveNotes(UUID sourceBoardUid, MoveNoteRequest request);
     MoveNoteResponse moveNote(UUID sourceBoardUid, UUID noteUid, MoveNoteRequest request);
+    void deleteAllByUserUid(UUID userUid);
 }

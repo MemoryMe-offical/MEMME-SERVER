@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,4 +41,7 @@ public interface NoteAttachmentRepository extends JpaRepository<NoteAttachment, 
             @Param("status") AttachmentStatus status,
             Pageable pageable
     );
+
+    @Query("select a.s3Key from NoteAttachment a where a.userUid = :userUid and a.s3Key is not null")
+    List<String> findAllS3KeysByUserUid(@Param("userUid") UUID userUid);
 }

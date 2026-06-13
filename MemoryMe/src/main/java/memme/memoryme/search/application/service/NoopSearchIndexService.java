@@ -16,4 +16,9 @@ public class NoopSearchIndexService implements SearchIndexService {
     public void reindexUser(UUID userUid, List<SearchDocument> documents) {
         throw new BusinessException(SearchErrorCode.SEARCH_DISABLED);
     }
+
+    @Override
+    public void deleteUserIndex(UUID userUid) {
+        // search disabled — no-op
+    }
 }

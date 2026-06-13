@@ -68,6 +68,12 @@ public class PendingLinkServiceImpl implements PendingLinkService {
         pendingLinkRepository.deleteByUidAndUserUid(pendingLinkUid, userUid);
     }
 
+    @Override
+    @Transactional
+    public void deleteAllByUserUid(UUID userUid) {
+        pendingLinkRepository.deleteAllByUserUid(userUid);
+    }
+
     private void validateUrl(String url) {
         if (url == null || url.isBlank() || url.length() > 2048) {
             throw new BusinessException(PendingLinkErrorCode.INVALID_PENDING_LINK_REQUEST);

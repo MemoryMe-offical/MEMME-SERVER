@@ -34,6 +34,15 @@ public class ElasticsearchSearchIndexService implements SearchIndexService {
         }
     }
 
+    @Override
+    public void deleteUserIndex(UUID userUid) {
+        try {
+            deleteUserDocuments(userUid);
+        } catch (ElasticsearchException | IOException e) {
+            throw new BusinessException(SearchErrorCode.SEARCH_INDEX_FAILED);
+        }
+    }
+
     private void deleteUserDocuments(UUID userUid) throws IOException {
         elasticsearchClient.deleteByQuery(request -> request
                 .index(searchProperties.getIndexName())

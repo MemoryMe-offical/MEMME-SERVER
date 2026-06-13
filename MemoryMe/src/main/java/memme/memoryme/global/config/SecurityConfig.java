@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/v1/auth/register",
                                 "/v1/email/**",
                                 "/uploads/**",
-                                "/v1/auth/kakao"
+                                "/v1/auth/kakao",
+                                "/v1/auth/pw/reset"
                         ).permitAll()
 
                         .anyRequest().authenticated()
