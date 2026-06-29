@@ -1,6 +1,7 @@
 package memme.memoryme.auth.application.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import memme.memoryme.auth.api.dto.apple.AppleLoginRequest;
 import memme.memoryme.auth.api.dto.apple.AppleTokenResponse;
 import memme.memoryme.auth.api.dto.email.LoginResponseDTO;
@@ -23,7 +24,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import java.util.UUID;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AppleServiceImpl implements AppleService {
@@ -38,18 +39,24 @@ public class AppleServiceImpl implements AppleService {
     @Override
     @Transactional
     public LoginResponseDTO login(AppleLoginRequest request) {
+        log.info("1. Apple login start");
         AppleTokenResponse tokenResponse = requestAppleToken(request.code());
 
+        log.info("2. Apple token received");
         if (tokenResponse == null || tokenResponse.idToken() == null) {
+            log.error("idToken is null");
             throw new BusinessException(AuthErrorCode.APPLE_TOKEN_EXCHANGE_FAILED);
         }
 
         String appleId = appleJwtProvider.verifyAndGetAppleId(tokenResponse.idToken());
+        log.info("3. Apple ID = {}", appleId);
         String email = appleJwtProvider.getEmail(tokenResponse.idToken());
+        log.info("4. Email = {}", email);
 
         UserEntity user = userRepository
                 .findByProviderAndProviderId("APPLE", appleId)
                 .orElseGet(() -> createNewAppleUser(appleId, email));
+        log.info("5. User uid = {}", user.getUid());
 
         if (email != null && (user.getEmail() == null || user.getEmail().isEmpty())) {
             user.setEmail(email);
@@ -59,13 +66,16 @@ public class AppleServiceImpl implements AppleService {
                 user.getEmail() == null ? "" : user.getEmail(),
                 user.getUid().toString()
         );
+        log.info("6. AccessToken created");
 
         String refreshToken = jwtUtil.createRefreshToken(
                 user.getUid().toString()
         );
+        log.info("7. RefreshToken created");
 
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
+        log.info("8. User saved");
 
         return new LoginResponseDTO(
                 accessToken,
@@ -94,6 +104,7 @@ public class AppleServiceImpl implements AppleService {
                             entity,
                             AppleTokenResponse.class
                     );
+            log.info("Apple token response = {}", response.getBody());
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new BusinessException(AuthErrorCode.APPLE_TOKEN_EXCHANGE_FAILED);
@@ -102,6 +113,7 @@ public class AppleServiceImpl implements AppleService {
             return response.getBody();
 
         } catch (Exception e) {
+            log.error("Apple token request failed", e);
             throw new BusinessException(AuthErrorCode.APPLE_TOKEN_EXCHANGE_FAILED);
         }
     }
