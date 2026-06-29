@@ -42,6 +42,7 @@ public class SecurityConfig {
                                 "/v1/email/**",
                                 "/uploads/**",
                                 "/v1/auth/kakao",
+                                "/v1/auth/apple",
                                 "/v1/auth/pw/**"
                         ).permitAll()
 
