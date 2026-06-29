@@ -104,7 +104,7 @@ public class AppleServiceImpl implements AppleService {
                             entity,
                             AppleTokenResponse.class
                     );
-            log.info("Apple token response = {}", response.getBody());
+            log.info("Apple token response status = {}", response.getStatusCode());
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new BusinessException(AuthErrorCode.APPLE_TOKEN_EXCHANGE_FAILED);
