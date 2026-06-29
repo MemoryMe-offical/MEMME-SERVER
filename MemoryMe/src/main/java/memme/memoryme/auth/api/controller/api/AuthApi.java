@@ -3,6 +3,7 @@ package memme.memoryme.auth.api.controller.api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import memme.memoryme.auth.api.dto.apple.AppleLoginRequest;
 import memme.memoryme.auth.api.dto.email.*;
 import memme.memoryme.auth.api.dto.kakao.KakaoLoginRequestDTO;
 import memme.memoryme.auth.api.dto.pw.PwResetRequestDTO;
@@ -71,6 +72,11 @@ public interface AuthApi {
     ResponseEntity<ResponseWrapper<LoginResponseDTO>> kakaoLogin(
             @Parameter(description = "카카오 로그인 요청")
             @RequestBody KakaoLoginRequestDTO request
+    );
 
+    @Operation(summary = "애플 로그인")
+    @PostMapping("/apple")
+    ResponseEntity<ResponseWrapper<LoginResponseDTO>> appleLogin(
+            @RequestBody AppleLoginRequest request
     );
 }
