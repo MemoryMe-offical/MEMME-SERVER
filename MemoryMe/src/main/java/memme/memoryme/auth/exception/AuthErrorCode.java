@@ -20,7 +20,9 @@ public enum AuthErrorCode implements BaseErrorCode {
 
     KAKAO_TOKEN_EXCHANGE_FAILED(HttpStatus.BAD_REQUEST, "AUTH_K001", "카카오 Access Token 발급에 실패했습니다."),
     KAKAO_USER_PROFILE_FAILED(HttpStatus.BAD_REQUEST, "AUTH_K002", "카카오 이메일 정보를 가져올 수 없습니다."),
-    KAKAO_API_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_K999", "카카오 API 통신 중 오류가 발생했습니다.");
+    KAKAO_API_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_K999", "카카오 API 통신 중 오류가 발생했습니다."),
+
+    APPLE_TOKEN_EXCHANGE_FAILED(HttpStatus.BAD_REQUEST, "AUTH_A001", "애플 토큰 교환에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

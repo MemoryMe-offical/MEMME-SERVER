@@ -2,9 +2,11 @@ package memme.memoryme.auth.api.controller;
 
 import lombok.RequiredArgsConstructor;
 import memme.memoryme.auth.api.controller.api.AuthApi;
+import memme.memoryme.auth.api.dto.apple.AppleLoginRequest;
 import memme.memoryme.auth.api.dto.email.*;
 import memme.memoryme.auth.api.dto.kakao.KakaoLoginRequestDTO;
 import memme.memoryme.auth.api.dto.pw.PwResetRequestDTO;
+import memme.memoryme.auth.application.service.AppleService;
 import memme.memoryme.auth.application.service.AuthService;
 import memme.memoryme.global.util.response.ResponseWrapper;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController implements AuthApi {
     private final AuthService authService;
+    private final AppleService appleService;
 
     @Override
     public ResponseEntity<ResponseWrapper<RegisterResponseDTO>> completeRegistration(@RequestBody RegisterRequestDTO request) {
@@ -78,5 +81,10 @@ public class AuthController implements AuthApi {
         return ResponseEntity.ok(
                 ResponseWrapper.ok(200, "카카오 로그인 성공", response)
         );
+    }
+
+    @Override
+    public ResponseEntity<ResponseWrapper<LoginResponseDTO>> appleLogin(@RequestBody AppleLoginRequest request) {
+        return ResponseEntity.ok(ResponseWrapper.ok(200, "애플 로그인 성공", appleService.login(request)));
     }
 }
